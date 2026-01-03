@@ -385,7 +385,7 @@ const Attendance = () => {
         </Card>
       ) : null}
 
-      <Card className="pad" style={{ marginBottom: 12 }}>
+      {/* <Card className="pad" style={{ marginBottom: 12 }}>
         <div className="ui-title">Attendance Status Types</div>
         <div className="ui-divider" style={{ margin: "10px 0" }} />
         <div className="ui-small ui-muted" style={{ lineHeight: 1.7 }}>
@@ -397,7 +397,7 @@ const Attendance = () => {
           <br />
           Leave
         </div>
-      </Card>
+      </Card> */}
 
       <Card className="pad" padded={false}>
         {loading ? (
