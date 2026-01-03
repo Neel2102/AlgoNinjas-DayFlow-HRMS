@@ -285,6 +285,24 @@ const AttendanceAdmin = () => {
     })).filter((x) => x.id);
   }, [employees]);
 
+  const nameByUserId = useMemo(() => {
+    const m = new Map();
+    for (const e of employees || []) {
+      const id = e?.user?._id;
+      if (!id) continue;
+      const name = String(e?.personal?.fullName || "").trim();
+      if (name) m.set(String(id), name);
+    }
+    return m;
+  }, [employees]);
+
+  const employeeNameForRow = (r) => {
+    const uid = r?.user?._id;
+    const name = uid ? nameByUserId.get(String(uid)) : "";
+    if (name) return name;
+    return r?.user?.employeeId || r?.user?.email || "";
+  };
+
   const weekChart = useMemo(() => {
     const days = Array.isArray(weekSummary?.days) ? weekSummary.days : [];
     const maxY = Math.max(1, Number(weekSummary?.totalEmployees) || 0);
