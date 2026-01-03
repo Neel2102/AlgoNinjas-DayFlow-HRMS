@@ -82,28 +82,6 @@ const Reports = () => {
     return s;
   };
 
-  const downloadAttendanceCsv = () => {
-    const days = Array.isArray(summary?.days) ? summary.days : [];
-    const rows = [
-      ["From", range.from],
-      ["To", range.to],
-      ["Total employees", summary?.totalEmployees ?? ""],
-      [],
-      ["Date", "Present", "Leave", "Absent"],
-      ...days.map((d) => [d?.date, d?.present ?? 0, d?.leave ?? 0, d?.absent ?? 0]),
-    ];
-    const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `attendance_report_${range.from}_to_${range.to}.csv`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-  };
-
   const safe = (v) => (v === null || v === undefined ? "" : v);
 
   const remaining = (balance, key) => {
@@ -310,7 +288,6 @@ const Reports = () => {
             Employee master data (CSV)
           </div>
           <div className="ui-row gap-8">
-            <Button onClick={downloadAttendanceCsv} disabled={loading || !summary}>Download Attendance CSV</Button>
             <Button onClick={downloadEmployeesCsv} disabled={employeeCsvLoading}>{employeeCsvLoading ? "Preparing..." : "Download Employees CSV"}</Button>
           </div>
         </div>

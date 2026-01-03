@@ -52,17 +52,13 @@ const Dashboard = () => {
   const [error, setError] = useState("");
   const [attendanceToday, setAttendanceToday] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
-
-  const [broadcastSubject, setBroadcastSubject] = useState("");
-  const [broadcastMessage, setBroadcastMessage] = useState("");
-  const [broadcastResult, setBroadcastResult] = useState(null);
-
   const [notifications, setNotifications] = useState([]);
 
   const [createEmployeeId, setCreateEmployeeId] = useState("");
   const [createFullName, setCreateFullName] = useState("");
   const [createEmailPrefix, setCreateEmailPrefix] = useState("");
   const [createDomain, setCreateDomain] = useState("");
+  const [createPersonalEmail, setCreatePersonalEmail] = useState("");
   const [createdCredentials, setCreatedCredentials] = useState([]);
 
   useEffect(() => {
@@ -105,48 +101,6 @@ const Dashboard = () => {
       mounted = false;
     };
   }, [isAdmin]);
-
-  const doBroadcast = async () => {
-    setActionLoading(true);
-    setError("");
-    setBroadcastResult(null);
-    try {
-      const result = await notificationService.broadcastAlert({
-        subject: broadcastSubject,
-        message: broadcastMessage,
-        sendEmail: false,
-        sendInApp: true,
-      });
-      setBroadcastResult(result || null);
-      setBroadcastSubject("");
-      setBroadcastMessage("");
-      toast.success("In-app message sent");
-    } catch (err) {
-      const msg = getErrorMessage(err);
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const markRead = async (id) => {
-    setActionLoading(true);
-    setError("");
-    try {
-      const updated = await notificationService.markRead(id);
-      setNotifications((prev) =>
-        (prev || []).map((n) => (n?._id === updated?._id ? updated : n))
-      );
-      toast.success("Marked as read");
-    } catch (err) {
-      const msg = getErrorMessage(err);
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setActionLoading(false);
-    }
-  };
 
   const filteredEmployees = useMemo(() => {
     const q = String(shellSearch || "").trim().toLowerCase();
@@ -201,6 +155,38 @@ const Dashboard = () => {
     }
   };
 
+  const doBreakStart = async () => {
+    setActionLoading(true);
+    setError("");
+    try {
+      const record = await attendanceService.breakStart();
+      setAttendanceToday(record);
+      toast.success("Break started");
+    } catch (err) {
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const doBreakEnd = async () => {
+    setActionLoading(true);
+    setError("");
+    try {
+      const record = await attendanceService.breakEnd();
+      setAttendanceToday(record);
+      toast.success("Break ended");
+    } catch (err) {
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const csvEscape = (val) => {
     const s = String(val ?? "");
     if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
@@ -232,6 +218,7 @@ const Dashboard = () => {
         fullName: createFullName,
         emailPrefix: createEmailPrefix,
         domain: createDomain,
+        personalEmail: createPersonalEmail,
       };
       const res = await employeeService.createEmployeeUser(payload);
       const cred = res?.credentials;
@@ -255,6 +242,7 @@ const Dashboard = () => {
       setCreateFullName("");
       setCreateEmailPrefix("");
       setCreateDomain("");
+      setCreatePersonalEmail("");
 
       toast.success("Employee created");
     } catch (err) {
@@ -266,29 +254,13 @@ const Dashboard = () => {
     }
   };
 
-  const doBreakStart = async () => {
+  const markRead = async (id) => {
     setActionLoading(true);
     setError("");
     try {
-      const record = await attendanceService.breakStart();
-      setAttendanceToday(record);
-      toast.success("Break started");
-    } catch (err) {
-      const msg = getErrorMessage(err);
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const doBreakEnd = async () => {
-    setActionLoading(true);
-    setError("");
-    try {
-      const record = await attendanceService.breakEnd();
-      setAttendanceToday(record);
-      toast.success("Break ended");
+      const updated = await notificationService.markRead(id);
+      setNotifications((prev) => (prev || []).map((n) => (n?._id === updated?._id ? updated : n)));
+      toast.success("Marked as read");
     } catch (err) {
       const msg = getErrorMessage(err);
       setError(msg);
@@ -332,54 +304,6 @@ const Dashboard = () => {
           <Card className="pad" style={{ marginBottom: 12 }}>
             <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
               <div>
-                <div className="ui-title">Send In-App Message to All Employees</div>
-                <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
-                  This sends an in-app alert (no email).
-                </div>
-              </div>
-            </div>
-
-            <div className="ui-grid" style={{ gridTemplateColumns: "1fr", gap: 10, marginTop: 12 }}>
-              <input
-                className="dash-search"
-                value={broadcastSubject}
-                onChange={(e) => setBroadcastSubject(e.target.value)}
-                placeholder="Subject"
-              />
-              <textarea
-                className="dash-search"
-                value={broadcastMessage}
-                onChange={(e) => setBroadcastMessage(e.target.value)}
-                placeholder="Message"
-                rows={4}
-                style={{ resize: "vertical" }}
-              />
-            </div>
-
-            <div className="ui-row" style={{ marginTop: 10, justifyContent: "flex-end" }}>
-              <Button
-                onClick={doBroadcast}
-                disabled={
-                  actionLoading ||
-                  !String(broadcastSubject).trim() ||
-                  !String(broadcastMessage).trim() ||
-                  false
-                }
-              >
-                {actionLoading ? "Sending..." : "Send Alert"}
-              </Button>
-            </div>
-
-            {broadcastResult ? (
-              <div className="ui-small ui-muted" style={{ marginTop: 10 }}>
-                In-app created: {broadcastResult?.notificationsCreated ?? 0}
-              </div>
-            ) : null}
-          </Card>
-
-          <Card className="pad" style={{ marginBottom: 12 }}>
-            <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
-              <div>
                 <div className="ui-title">Create Employee</div>
                 <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
                   This generates an organization email and a one-time password for the employee.
@@ -402,6 +326,12 @@ const Dashboard = () => {
                 value={createFullName}
                 onChange={(e) => setCreateFullName(e.target.value)}
                 placeholder="Full Name"
+              />
+              <input
+                className="dash-search"
+                value={createPersonalEmail}
+                onChange={(e) => setCreatePersonalEmail(e.target.value)}
+                placeholder="Personal email (for alerts)"
               />
               <input
                 className="dash-search"
@@ -492,8 +422,9 @@ const Dashboard = () => {
               const empId = e?.user?.employeeId || "";
               const pic = e?.personal?.profilePictureUrl || "";
               const dot = dotClassFromStatus(null);
+              const userId = e?.user?._id || e?.user?.id || "";
               return (
-                <div
+                <Card
                   key={e?._id || email}
                   className="employee-card-employeedashboard"
                   role="button"
@@ -502,6 +433,7 @@ const Dashboard = () => {
                   onKeyDown={(ev) => {
                     if (ev.key === "Enter") navigate(`/admin/employees/${e?._id}`);
                   }}
+                  style={{ cursor: "pointer" }}
                 >
                   <div className="employee-content-employeedashboard">
                     <div className="employee-left-employeedashboard">
@@ -517,9 +449,17 @@ const Dashboard = () => {
                         <div className="employee-id-employeedashboard">{empId || email}</div>
                       </div>
                     </div>
-                    <div className={`employee-status-employeedashboard ${dot}-employeedashboard`} />
+                    <div
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: 999,
+                        border: "1px solid var(--border-medium)",
+                        background: dot === "present" ? "var(--secondary)" : "var(--border-dark)",
+                      }}
+                    />
                   </div>
-                </div>
+                </Card>
               );
             })}
           </div>
