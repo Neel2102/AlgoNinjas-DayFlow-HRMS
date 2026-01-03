@@ -239,10 +239,12 @@ const LeaveApproval = () => {
                         <td>{r?.type || ""}</td>
                         <td>{r?.status || ""}</td>
                         <td>
-                          <div className="ui-row gap-8" style={{ flexWrap: "wrap" }}>
-                            <Button variant="danger" disabled={!pending} onClick={() => openDecision({ id, action: "reject" })}>Reject</Button>
-                            <Button variant="success" disabled={!pending} onClick={() => openDecision({ id, action: "approve" })}>Approve</Button>
-                          </div>
+                          {pending ? (
+                            <div className="ui-row gap-8" style={{ flexWrap: "wrap" }}>
+                              <Button variant="danger" onClick={() => openDecision({ id, action: "reject" })}>Reject</Button>
+                              <Button variant="success" onClick={() => openDecision({ id, action: "approve" })}>Approve</Button>
+                            </div>
+                          ) : null}
                         </td>
                       </tr>
                     );
