@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { toast } from "react-toastify";
 
 import { useAuth } from "../../context/AuthContext";
 import "../../CSS/Auth.css";
@@ -59,17 +60,22 @@ const SignUp = () => {
     setError("");
     if (passwordPolicyError) {
       setError(passwordPolicyError);
+      toast.error(passwordPolicyError);
       return;
     }
     try {
       const res = await signUp({ employeeId, email, password, role, adminSecret: role === "employee" ? "" : adminSecret });
       if (res?.verificationRequired) {
+        toast.success("OTP sent. Please verify.");
         navigate("/verify-otp", { replace: true, state: { email: res?.email || email } });
         return;
       }
+      toast.success("Account created successfully");
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     }
   };
 

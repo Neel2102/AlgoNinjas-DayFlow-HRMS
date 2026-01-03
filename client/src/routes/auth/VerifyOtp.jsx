@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import { useAuth } from "../../context/AuthContext";
 import "../../CSS/Auth.css";
@@ -34,9 +35,12 @@ const VerifyOtp = () => {
     setSuccess("");
     try {
       await verifyOtp({ email, otp });
+      toast.success("Email verified successfully");
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     }
   };
 
@@ -46,8 +50,11 @@ const VerifyOtp = () => {
     try {
       await resendOtp({ email });
       setSuccess("OTP sent. Check your email.");
+      toast.success("OTP resent");
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     }
   };
 

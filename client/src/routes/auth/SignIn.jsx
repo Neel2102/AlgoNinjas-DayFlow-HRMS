@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect } from "react";
+import { toast } from "react-toastify";
 
 import { useAuth } from "../../context/AuthContext";
 import "../../CSS/Auth.css";
@@ -35,9 +36,12 @@ const SignIn = () => {
     setError("");
     try {
       await signIn({ email, password });
+      toast.success("Signed in successfully");
       navigate("/dashboard", { replace: true });
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     }
   };
 

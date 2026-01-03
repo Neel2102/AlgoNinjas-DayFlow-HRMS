@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import { useAuth } from "../../context/AuthContext";
 import "../../CSS/Auth.css";
@@ -47,9 +48,12 @@ const ResetPassword = () => {
     try {
       await resetPassword({ email, otp, newPassword });
       setSuccess("Password reset successful. Please sign in.");
+      toast.success("Password reset successful");
       navigate("/signin", { replace: true });
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     }
   };
 

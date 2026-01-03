@@ -7,6 +7,7 @@ import Table from "../../components/common/Table";
 import Modal from "../../components/common/Modal";
 import * as employeeService from "../../services/employeeService";
 import * as leaveService from "../../services/leaveService";
+import { toast } from "react-toastify";
 
 const getErrorMessage = (err) => {
   return (
@@ -107,12 +108,15 @@ const LeaveManagement = () => {
 
       await leaveService.applyLeave({ type, startDate, endDate, remarks, attachmentName: finalAttachmentName, attachmentUrl });
       setSuccess("Leave request submitted");
+      toast.success("Leave request submitted");
       setRemarks("");
       setAttachmentName("");
       setAttachmentFile(null);
       await load();
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }

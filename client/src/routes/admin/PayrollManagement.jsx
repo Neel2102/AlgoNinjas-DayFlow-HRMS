@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import "../../CSS/Dashboard.css";
 import * as employeeService from "../../services/employeeService";
 import * as payrollService from "../../services/payrollService";
+import { toast } from "react-toastify";
 
 const getErrorMessage = (err) => {
   return (
@@ -99,18 +100,25 @@ const PayrollManagement = () => {
     setSuccess("");
     try {
       if (!selectedUserId) {
-        setError("Select an employee to generate payroll");
+        const msg = "Select an employee to generate payroll";
+        setError(msg);
+        toast.error(msg);
         return;
       }
       if (!month) {
-        setError("Select a month");
+        const msg = "Select a month";
+        setError(msg);
+        toast.error(msg);
         return;
       }
       await payrollService.generatePayrollForUser({ userId: selectedUserId, month });
       setSuccess("Payroll generated from salary structure");
+      toast.success("Payroll generated for selected employee");
       await load();
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setGenLoading(false);
     }
@@ -122,14 +130,19 @@ const PayrollManagement = () => {
     setSuccess("");
     try {
       if (!month) {
-        setError("Select a month");
+        const msg = "Select a month";
+        setError(msg);
+        toast.error(msg);
         return;
       }
       const res = await payrollService.generatePayrollForAll({ month });
       setSuccess(`Payroll generated for ${res?.generated ?? "all"} employees`);
+      toast.success("Payroll generated");
       await load();
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setGenLoading(false);
     }

@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { toast } from "react-toastify";
 
 import { useAuth } from "../../context/AuthContext";
 import "../../CSS/Auth.css";
@@ -31,9 +32,12 @@ const ForgotPassword = () => {
     try {
       await forgotPassword({ email });
       setSuccess("If this email exists, an OTP was sent.");
+      toast.success("OTP sent (if the email exists)");
       navigate("/reset-password", { replace: true, state: { email } });
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     }
   };
 

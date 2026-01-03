@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 
 import Button from "../../components/common/Button";
 import * as employeeService from "../../services/employeeService";
+import { toast } from "react-toastify";
 import "../../CSS/Profile.css";
 
 const getErrorMessage = (err) => {
@@ -53,7 +54,9 @@ const Profile = () => {
         window.dispatchEvent(new Event("profile_picture_updated"));
       } catch (err) {
         if (!mounted) return;
-        setError(getErrorMessage(err));
+        const msg = getErrorMessage(err);
+        setError(msg);
+        toast.error(msg);
       } finally {
         if (!mounted) return;
         setLoading(false);
@@ -84,8 +87,11 @@ const Profile = () => {
       });
       setMe(updated);
       setSuccess("Profile updated successfully!");
+      toast.success("Profile updated");
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
@@ -117,8 +123,11 @@ const Profile = () => {
       localStorage.setItem(profilePicStorageKey(updated?.user), url);
       window.dispatchEvent(new Event("profile_picture_updated"));
       setSuccess("Profile picture updated");
+      toast.success("Profile picture updated");
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setUploading(false);
       e.target.value = "";

@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 
 import "../../CSS/Dashboard.css";
 import * as employeeService from "../../services/employeeService";
+import { toast } from "react-toastify";
 
 const getErrorMessage = (err) => {
   return (
@@ -212,8 +213,11 @@ const EmployeeDetail = () => {
       syncFormFromEmployee(updated);
       setEditMode(false);
       setSuccess("Employee updated");
+      toast.success("Employee updated");
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }

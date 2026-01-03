@@ -7,6 +7,7 @@ import { useAuth } from "../../context/AuthContext";
 import * as employeeService from "../../services/employeeService";
 import * as attendanceService from "../../services/attendanceService";
 import * as notificationService from "../../services/notificationService";
+import { toast } from "react-toastify";
 import "../../CSS/Employee.css";
 
 const getErrorMessage = (err) => {
@@ -91,7 +92,9 @@ const Dashboard = () => {
         }
       } catch (err) {
         if (!mounted) return;
-        setError(getErrorMessage(err));
+        const msg = getErrorMessage(err);
+        setError(msg);
+        toast.error(msg);
       } finally {
         if (!mounted) return;
         setLoading(false);
@@ -117,8 +120,11 @@ const Dashboard = () => {
       setBroadcastResult(result || null);
       setBroadcastSubject("");
       setBroadcastMessage("");
+      toast.success("In-app message sent");
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setActionLoading(false);
     }
@@ -132,8 +138,11 @@ const Dashboard = () => {
       setNotifications((prev) =>
         (prev || []).map((n) => (n?._id === updated?._id ? updated : n))
       );
+      toast.success("Marked as read");
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setActionLoading(false);
     }
@@ -156,6 +165,7 @@ const Dashboard = () => {
 
   const doLogout = async () => {
     await signOut();
+    toast.success("Logged out");
     navigate("/", { replace: true });
   };
 
@@ -165,8 +175,11 @@ const Dashboard = () => {
     try {
       const record = await attendanceService.checkIn();
       setAttendanceToday(record);
+      toast.success("Checked in");
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setActionLoading(false);
     }
@@ -178,8 +191,11 @@ const Dashboard = () => {
     try {
       const record = await attendanceService.checkOut();
       setAttendanceToday(record);
+      toast.success("Checked out");
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setActionLoading(false);
     }
@@ -239,8 +255,12 @@ const Dashboard = () => {
       setCreateFullName("");
       setCreateEmailPrefix("");
       setCreateDomain("");
+
+      toast.success("Employee created");
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setActionLoading(false);
     }
@@ -252,8 +272,11 @@ const Dashboard = () => {
     try {
       const record = await attendanceService.breakStart();
       setAttendanceToday(record);
+      toast.success("Break started");
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setActionLoading(false);
     }
@@ -265,8 +288,11 @@ const Dashboard = () => {
     try {
       const record = await attendanceService.breakEnd();
       setAttendanceToday(record);
+      toast.success("Break ended");
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     } finally {
       setActionLoading(false);
     }

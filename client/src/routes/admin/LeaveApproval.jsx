@@ -7,6 +7,7 @@ import Table from "../../components/common/Table";
 import Modal from "../../components/common/Modal";
 import * as employeeService from "../../services/employeeService";
 import * as leaveService from "../../services/leaveService";
+import { toast } from "react-toastify";
 
 const getErrorMessage = (err) => {
   return (
@@ -108,9 +109,12 @@ const LeaveApproval = () => {
         await leaveService.rejectLeave({ id, comment });
       }
       setDecision({ open: false, id: "", action: "", comment: "" });
+      toast.success(action === "approve" ? "Leave approved" : "Leave rejected");
       await load();
     } catch (err) {
-      setError(getErrorMessage(err));
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
     }
   };
 

@@ -1,5 +1,7 @@
 import './App.css'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
+import { ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import LandingPage from './pages/landingpage'
 import Navbar from './pages/Navbar'
 import SignIn from "./routes/auth/SignIn";
@@ -75,6 +77,7 @@ function Layout() {
 function App() {
   return (
     <BrowserRouter>
+      <ToastContainer position="top-right" autoClose={2500} hideProgressBar={false} newestOnTop closeOnClick pauseOnFocusLoss pauseOnHover draggable />
       <Layout />
     </BrowserRouter>
   )
