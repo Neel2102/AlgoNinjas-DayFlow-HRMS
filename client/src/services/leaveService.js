@@ -12,6 +12,11 @@ export const applyLeave = async ({ type, startDate, endDate, remarks, attachment
   return unwrap(res);
 };
 
+export const uploadLeaveAttachment = async ({ dataUrl, fileName } = {}) => {
+  const res = await api.post("/leaves/upload", { dataUrl, fileName });
+  return unwrap(res);
+};
+
 export const getMyLeaves = async () => {
   const res = await api.get("/leaves/me");
   return unwrap(res);

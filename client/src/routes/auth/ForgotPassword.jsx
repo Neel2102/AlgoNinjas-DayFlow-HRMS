@@ -42,7 +42,9 @@ const ForgotPassword = () => {
       <div className="auth-card">
         <div className="auth-panel">
           <h2 className="auth-title">Forgot Password</h2>
-          <div className="auth-logo">Dayflow HRMS</div>
+          <div className="auth-logo">
+            <img src="/white.png" alt="Dayflow" style={{ height: 36 }} />
+          </div>
 
           {error ? <div className="auth-error">{error}</div> : null}
           {success ? <div className="auth-error">{success}</div> : null}

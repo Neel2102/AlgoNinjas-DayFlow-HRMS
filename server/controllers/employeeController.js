@@ -1,5 +1,6 @@
 import Employee from "../models/Employee.js";
 import User from "../models/User.js";
+import Leave from "../models/Leave.js";
 import { sendError, sendSuccess } from "../utils/responseHandler.js";
 import cloudinary from "../config/cloudinary.js";
 import bcrypt from "bcryptjs";
@@ -9,6 +10,29 @@ const sanitizeEmployee = (employee) => {
   if (!employee) return employee;
   const obj = employee.toObject ? employee.toObject() : employee;
   return obj;
+};
+
+const makeNameCode = (fullName) => {
+  const parts = String(fullName || "")
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+  const first = (parts[0] || "").toUpperCase();
+  const last = (parts.length > 1 ? parts[parts.length - 1] : "").toUpperCase();
+  const a = (first.slice(0, 2) || "XX").padEnd(2, "X");
+  const b = (last.slice(0, 2) || "XX").padEnd(2, "X");
+  return `${a}${b}`.replace(/[^A-Z]/g, "X");
+};
+
+const generateEmployeeId = async ({ fullName }) => {
+  const companyCode = String(process.env.ORG_CODE || "OI").trim().toUpperCase() || "OI";
+  const year = String(new Date().getFullYear());
+  const nameCode = makeNameCode(fullName);
+
+  const prefix = `${companyCode}${nameCode}${year}`;
+  const count = await User.countDocuments({ employeeId: { $regex: `^${prefix}` } });
+  const serial = String(count + 1).padStart(4, "0");
+  return `${prefix}${serial}`;
 };
 
 export const getMyProfile = async (req, res, next) => {
@@ -82,7 +106,68 @@ export const listEmployees = async (req, res, next) => {
     const employees = await Employee.find()
       .populate("user", "employeeId email role isEmailVerified")
       .sort({ createdAt: -1 });
-    return sendSuccess(res, employees.map(sanitizeEmployee));
+
+    const userIds = (employees || []).map((e) => e?.user?._id).filter(Boolean);
+    const statsRows = await Leave.aggregate([
+      { $match: { user: { $in: userIds } } },
+      {
+        $group: {
+          _id: { user: "$user", status: "$status", type: "$type" },
+          days: { $sum: { $ifNull: ["$days", 1] } },
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const statsByUser = new Map();
+    for (const r of statsRows || []) {
+      const uid = r?._id?.user ? String(r._id.user) : "";
+      if (!uid) continue;
+      const status = String(r?._id?.status || "");
+      const type = String(r?._id?.type || "");
+      const days = Number(r?.days) || 0;
+      const count = Number(r?.count) || 0;
+
+      const cur = statsByUser.get(uid) || {
+        approvedDays: 0,
+        pendingDays: 0,
+        approvedByType: { Paid: 0, Sick: 0, Unpaid: 0 },
+        pendingByType: { Paid: 0, Sick: 0, Unpaid: 0 },
+        approvedCount: 0,
+        pendingCount: 0,
+      };
+
+      if (status === "Approved") {
+        cur.approvedDays += days;
+        cur.approvedCount += count;
+        if (cur.approvedByType[type] !== undefined) cur.approvedByType[type] += days;
+      }
+      if (status === "Pending") {
+        cur.pendingDays += days;
+        cur.pendingCount += count;
+        if (cur.pendingByType[type] !== undefined) cur.pendingByType[type] += days;
+      }
+
+      statsByUser.set(uid, cur);
+    }
+
+    const out = (employees || []).map((e) => {
+      const obj = sanitizeEmployee(e);
+      const uid = e?.user?._id ? String(e.user._id) : "";
+      return {
+        ...obj,
+        leaveStats: statsByUser.get(uid) || {
+          approvedDays: 0,
+          pendingDays: 0,
+          approvedByType: { Paid: 0, Sick: 0, Unpaid: 0 },
+          pendingByType: { Paid: 0, Sick: 0, Unpaid: 0 },
+          approvedCount: 0,
+          pendingCount: 0,
+        },
+      };
+    });
+
+    return sendSuccess(res, out);
   } catch (err) {
     next(err);
   }
@@ -96,7 +181,49 @@ export const getEmployeeById = async (req, res, next) => {
       "employeeId email role isEmailVerified"
     );
     if (!employee) return sendError(res, "Employee not found", 404);
-    return sendSuccess(res, sanitizeEmployee(employee));
+
+    const userId = employee?.user?._id;
+    let leaveStats = {
+      approvedDays: 0,
+      pendingDays: 0,
+      approvedByType: { Paid: 0, Sick: 0, Unpaid: 0 },
+      pendingByType: { Paid: 0, Sick: 0, Unpaid: 0 },
+      approvedCount: 0,
+      pendingCount: 0,
+    };
+
+    if (userId) {
+      const statsRows = await Leave.aggregate([
+        { $match: { user: userId } },
+        {
+          $group: {
+            _id: { status: "$status", type: "$type" },
+            days: { $sum: { $ifNull: ["$days", 1] } },
+            count: { $sum: 1 },
+          },
+        },
+      ]);
+
+      for (const r of statsRows || []) {
+        const status = String(r?._id?.status || "");
+        const type = String(r?._id?.type || "");
+        const days = Number(r?.days) || 0;
+        const count = Number(r?.count) || 0;
+
+        if (status === "Approved") {
+          leaveStats.approvedDays += days;
+          leaveStats.approvedCount += count;
+          if (leaveStats.approvedByType[type] !== undefined) leaveStats.approvedByType[type] += days;
+        }
+        if (status === "Pending") {
+          leaveStats.pendingDays += days;
+          leaveStats.pendingCount += count;
+          if (leaveStats.pendingByType[type] !== undefined) leaveStats.pendingByType[type] += days;
+        }
+      }
+    }
+
+    return sendSuccess(res, { ...sanitizeEmployee(employee), leaveStats });
   } catch (err) {
     next(err);
   }
@@ -175,11 +302,14 @@ export const createEmployeeUser = async (req, res, next) => {
   try {
     const { employeeId, fullName, emailPrefix, domain, personalEmail } = req.body || {};
     if (!employeeId) return sendError(res, "employeeId is required", 400);
+    const { fullName, emailPrefix, domain } = req.body || {};
+    const cleanFullName = String(fullName || "").trim();
+    if (!cleanFullName) return sendError(res, "fullName is required", 400);
 
     const resolvedDomain = String(domain || process.env.ORG_EMAIL_DOMAIN || "").trim();
     if (!resolvedDomain) return sendError(res, "domain is required", 400);
 
-    const prefixCandidate = String(emailPrefix || employeeId || "")
+    const prefixCandidate = String(emailPrefix || cleanFullName || "")
       .trim()
       .toLowerCase()
       .replace(/\s+/g, ".")
@@ -188,7 +318,7 @@ export const createEmployeeUser = async (req, res, next) => {
     if (!prefixCandidate) return sendError(res, "emailPrefix is required", 400);
 
     const email = `${prefixCandidate}@${resolvedDomain}`.toLowerCase();
-    const cleanEmployeeId = String(employeeId).trim();
+    const cleanEmployeeId = await generateEmployeeId({ fullName: cleanFullName });
 
     const existing = await User.findOne({ $or: [{ email }, { employeeId: cleanEmployeeId }] });
     if (existing) return sendError(res, "User already exists", 409);
@@ -224,7 +354,7 @@ export const createEmployeeUser = async (req, res, next) => {
 
     return sendSuccess(
       res,
-      { employee: sanitizeEmployee(populated), credentials: { email, password: rawPassword } },
+      { employee: sanitizeEmployee(populated), credentials: { employeeId: cleanEmployeeId, email, password: rawPassword } },
       "Employee created",
       201
     );

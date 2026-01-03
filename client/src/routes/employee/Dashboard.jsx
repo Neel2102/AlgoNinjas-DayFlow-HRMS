@@ -193,7 +193,7 @@ const Dashboard = () => {
 
   const downloadCsv = () => {
     const rows = [
-      ["Employee ID", "Name", "Email", "Password"],
+      ["Login ID", "Name", "Email", "Password"],
       ...(createdCredentials || []).map((r) => [r.employeeId, r.fullName, r.email, r.password]),
     ];
     const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
@@ -213,19 +213,19 @@ const Dashboard = () => {
     setError("");
     try {
       const payload = {
-        employeeId: createEmployeeId,
         fullName: createFullName,
         emailPrefix: createEmailPrefix,
         domain: createDomain,
       };
       const res = await employeeService.createEmployeeUser(payload);
       const cred = res?.credentials;
+      const employeeId = cred?.employeeId || res?.employee?.user?.employeeId || "";
       const email = cred?.email || "";
       const password = cred?.password || "";
 
       setCreatedCredentials((prev) => [
         {
-          employeeId: String(createEmployeeId || "").trim(),
+          employeeId: String(employeeId || "").trim(),
           fullName: String(createFullName || "").trim(),
           email,
           password,
@@ -236,7 +236,6 @@ const Dashboard = () => {
       const list = await employeeService.listEmployees();
       setEmployees(Array.isArray(list) ? list : []);
 
-      setCreateEmployeeId("");
       setCreateFullName("");
       setCreateEmailPrefix("");
       setCreateDomain("");
@@ -280,7 +279,7 @@ const Dashboard = () => {
         <div className="header-left-employeedashboard">
           <h1 className="title-employeedashboard">Dashboard</h1>
           <div className="subtitle-employeedashboard">
-            {isAdmin ? "Manage employees, attendance, time off and payroll" : "Your workday at a glance"}
+            {isAdmin ? "Manage employees, attendance, leave approvals and payroll" : "Your workday at a glance"}
           </div>
         </div>
         <div className="header-actions-employeedashboard">
@@ -374,15 +373,9 @@ const Dashboard = () => {
             <div className="ui-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10, marginTop: 12 }}>
               <input
                 className="dash-search"
-                value={createEmployeeId}
-                onChange={(e) => setCreateEmployeeId(e.target.value)}
-                placeholder="Employee ID (e.g. EMP010)"
-              />
-              <input
-                className="dash-search"
                 value={createFullName}
                 onChange={(e) => setCreateFullName(e.target.value)}
-                placeholder="Full Name (optional)"
+                placeholder="Full Name"
               />
               <input
                 className="dash-search"
@@ -401,7 +394,7 @@ const Dashboard = () => {
             <div className="ui-row" style={{ marginTop: 10, justifyContent: "flex-end" }}>
               <Button
                 onClick={doCreateEmployee}
-                disabled={actionLoading || !String(createEmployeeId).trim() || !String(createDomain).trim()}
+                disabled={actionLoading || !String(createFullName).trim() || !String(createDomain).trim()}
               >
                 {actionLoading ? "Creating..." : "Create Employee"}
               </Button>
@@ -412,7 +405,7 @@ const Dashboard = () => {
                 <table className="dash-table" style={{ width: "100%" }}>
                   <thead>
                     <tr>
-                      <th>Employee ID</th>
+                      <th>Login ID</th>
                       <th>Email</th>
                       <th>Password</th>
                     </tr>
@@ -453,7 +446,7 @@ const Dashboard = () => {
                   className="btn-employeedashboard btn-ghost-employeedashboard"
                   onClick={() => navigate("/admin/leaves")}
                 >
-                  Time Off
+                  Leave Approvals
                 </Button>
                 <Button
                   className="btn-employeedashboard btn-ghost-employeedashboard"
@@ -635,7 +628,7 @@ const Dashboard = () => {
               <div className="attendance-item-employeedashboard">
                 <span className="attendance-label-employeedashboard">Status:</span>
                 <span className="attendance-value-employeedashboard">
-                  {attendanceToday?.status || "—"}
+                  {attendanceToday?.status || "Absent"}
                 </span>
               </div>
               <div className="attendance-item-employeedashboard">

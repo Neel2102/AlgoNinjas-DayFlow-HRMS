@@ -20,6 +20,7 @@ const Profile = () => {
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState("");
+
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
@@ -129,13 +130,18 @@ const Profile = () => {
     return String(name).slice(0, 1).toUpperCase();
   };
 
+  const job = me?.job || {};
+  const salary = me?.salary || {};
+  const salaryStructure = me?.salaryStructure || {};
+  const documents = Array.isArray(me?.documents) ? me.documents : [];
+
   return (
     <div className="container-profile">
       {/* Header */}
       <div className="header-profile">
         <div className="header-left-profile">
           <h1 className="title-profile">My Profile</h1>
-          <div className="subtitle-profile">Manage your personal information</div>
+          <div className="subtitle-profile">View your profile details</div>
         </div>
 
         {/* Tab Controls */}
@@ -145,6 +151,24 @@ const Profile = () => {
             onClick={() => setActiveTab("private")}
           >
             Private Info
+          </button>
+          <button
+            className={`btn-profile ${activeTab === "job" ? "btn-primary-profile" : "btn-ghost-profile"}`}
+            onClick={() => setActiveTab("job")}
+          >
+            Job Details
+          </button>
+          <button
+            className={`btn-profile ${activeTab === "salary" ? "btn-primary-profile" : "btn-ghost-profile"}`}
+            onClick={() => setActiveTab("salary")}
+          >
+            Salary Structure
+          </button>
+          <button
+            className={`btn-profile ${activeTab === "docs" ? "btn-primary-profile" : "btn-ghost-profile"}`}
+            onClick={() => setActiveTab("docs")}
+          >
+            Documents
           </button>
           <button
             className={`btn-profile ${activeTab === "security" ? "btn-primary-profile" : "btn-ghost-profile"}`}
@@ -210,6 +234,123 @@ const Profile = () => {
                 OTP email verification is already implemented for enhanced security. 
                 Two-factor authentication (2FA) and session management features are planned for future updates.
               </div>
+            </div>
+          ) : activeTab === "job" ? (
+            <div className="content-card-profile">
+              <div className="section-title-profile">Job Details</div>
+              <div className="divider-profile" />
+
+              <div className="form-profile">
+                <div className="form-grid-profile">
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Title</label>
+                    <input className="form-input-profile" value={job?.title || ""} disabled />
+                  </div>
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Department</label>
+                    <input className="form-input-profile" value={job?.department || ""} disabled />
+                  </div>
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Manager</label>
+                    <input className="form-input-profile" value={job?.managerName || ""} disabled />
+                  </div>
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Work Location</label>
+                    <input className="form-input-profile" value={job?.workLocation || ""} disabled />
+                  </div>
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Join Date</label>
+                    <input className="form-input-profile" value={job?.joinDate ? new Date(job.joinDate).toISOString().slice(0, 10) : ""} disabled />
+                  </div>
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Employment Type</label>
+                    <input className="form-input-profile" value={job?.employmentType || ""} disabled />
+                  </div>
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Work Email</label>
+                    <input className="form-input-profile" value={job?.workEmail || ""} disabled />
+                  </div>
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Work Phone</label>
+                    <input className="form-input-profile" value={job?.workPhone || ""} disabled />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === "salary" ? (
+            <div className="content-card-profile">
+              <div className="section-title-profile">Salary Structure</div>
+              <div className="divider-profile" />
+
+              <div className="form-profile">
+                <div className="form-grid-profile">
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Monthly Wage</label>
+                    <input className="form-input-profile" value={salary?.monthlyWage ?? ""} disabled />
+                  </div>
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Yearly Wage</label>
+                    <input className="form-input-profile" value={salary?.yearlyWage ?? ""} disabled />
+                  </div>
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Currency</label>
+                    <input className="form-input-profile" value={salary?.currency || salaryStructure?.currency || ""} disabled />
+                  </div>
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Basic</label>
+                    <input className="form-input-profile" value={salaryStructure?.basic ?? salary?.basic ?? ""} disabled />
+                  </div>
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Allowances</label>
+                    <input className="form-input-profile" value={salaryStructure?.allowances ?? ""} disabled />
+                  </div>
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Deductions</label>
+                    <input className="form-input-profile" value={salaryStructure?.deductions ?? ""} disabled />
+                  </div>
+                </div>
+              </div>
+            </div>
+          ) : activeTab === "docs" ? (
+            <div className="content-card-profile">
+              <div className="section-title-profile">Documents</div>
+              <div className="divider-profile" />
+
+              {documents.length === 0 ? (
+                <div className="security-info-profile">No documents uploaded.</div>
+              ) : (
+                <div style={{ overflowX: "auto" }}>
+                  <table className="dash-table" style={{ width: "100%" }}>
+                    <thead>
+                      <tr>
+                        <th>Name</th>
+                        <th>Category</th>
+                        <th>File Name</th>
+                        <th>Link</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {documents.map((d, idx) => {
+                        const url = d?.fileUrl || d?.url || "";
+                        return (
+                          <tr key={`${d?.name || "doc"}-${idx}`}>
+                            <td>{d?.name || ""}</td>
+                            <td>{d?.category || ""}</td>
+                            <td>{d?.fileName || ""}</td>
+                            <td>
+                              {url ? (
+                                <a href={url} target="_blank" rel="noreferrer">Open</a>
+                              ) : (
+                                ""
+                              )}
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           ) : (
             <div className="content-card-profile">

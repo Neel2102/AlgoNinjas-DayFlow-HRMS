@@ -46,7 +46,9 @@ const SignIn = () => {
       <div className="auth-card">
         <div className="auth-panel">
           <h2 className="auth-title">Sign in Page</h2>
-          <div className="auth-logo">App/Web Logo</div>
+          <div className="auth-logo">
+            <img src="/white.png" alt="Dayflow" style={{ height: 36 }} />
+          </div>
 
           {error ? <div className="auth-error">{error}</div> : null}
 
@@ -57,8 +59,8 @@ const SignIn = () => {
                 className="auth-input"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                autoComplete="email"
+                placeholder="Login ID or Email"
+                autoComplete="username"
               />
             </div>
 
@@ -91,17 +93,13 @@ const SignIn = () => {
           <div className="auth-footer" style={{ marginTop: 10 }}>
             <Link className="auth-link" to="/forgot-password">Forgot password?</Link>
           </div>
-
-          <div className="auth-footer">
-            Don&apos;t have an account? <Link className="auth-link" to="/signup">Sign Up</Link>
-          </div>
         </div>
 
         <div className="auth-panel">
           <h2 className="auth-title">Note</h2>
           <div className="auth-hint">
             Normal user cannot register in real setups; HR/Admin creates employees.
-            For hackathon demo, you can sign up here using the backend endpoint.
+            Self signup is disabled.
             After login, a JWT is stored locally and sent as a Bearer token.
           </div>
         </div>

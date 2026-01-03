@@ -7,6 +7,7 @@ import {
   getAllAttendance,
   getMyMonthAttendance,
   getMyAttendance,
+  getWeeklySummary,
   listPresentByDate,
 } from "../controllers/attendanceController.js";
 import { requireAuth } from "../middlewares/authMiddleware.js";
@@ -22,6 +23,7 @@ router.get("/me", requireAuth, getMyAttendance);
 router.get("/me/month", requireAuth, getMyMonthAttendance);
 
 router.get("/present", requireAuth, requireRole("admin", "hr"), listPresentByDate);
+router.get("/weekly-summary", requireAuth, requireRole("admin", "hr"), getWeeklySummary);
 router.get("/", requireAuth, requireRole("admin", "hr"), getAllAttendance);
 
 export default router;

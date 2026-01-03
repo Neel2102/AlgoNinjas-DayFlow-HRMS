@@ -131,6 +131,15 @@ const AttendanceAdmin = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
+  const [weekSummary, setWeekSummary] = useState(null);
+  const [weekLoading, setWeekLoading] = useState(true);
+
+  const weekAnchor = useMemo(() => {
+    const start = startOfWeekMonday(anchorDate);
+    const end = addDays(start, 6);
+    return { from: isoDateKey(start), to: isoDateKey(end) };
+  }, [anchorDate]);
+
   const range = useMemo(() => {
     if (mode === "Week") {
       const start = startOfWeekMonday(anchorDate);
@@ -153,6 +162,28 @@ const AttendanceAdmin = () => {
   const goNext = () => {
     setAnchorDate((d) => (mode === "Week" ? addDays(startOfWeekMonday(d), 7) : addDays(d, 1)));
   };
+
+  useEffect(() => {
+    let mounted = true;
+    const run = async () => {
+      setWeekLoading(true);
+      try {
+        const data = await attendanceService.getWeeklySummary({ from: weekAnchor.from });
+        if (!mounted) return;
+        setWeekSummary(data || null);
+      } catch {
+        if (!mounted) return;
+        setWeekSummary(null);
+      } finally {
+        if (!mounted) return;
+        setWeekLoading(false);
+      }
+    };
+    run();
+    return () => {
+      mounted = false;
+    };
+  }, [weekAnchor.from]);
 
   useEffect(() => {
     let mounted = true;
@@ -254,23 +285,33 @@ const AttendanceAdmin = () => {
     })).filter((x) => x.id);
   }, [employees]);
 
-  const nameByUserId = useMemo(() => {
-    const m = new Map();
-    for (const e of employees || []) {
-      const id = e?.user?._id;
-      if (!id) continue;
-      const name = String(e?.personal?.fullName || "").trim();
-      if (name) m.set(String(id), name);
-    }
-    return m;
-  }, [employees]);
+  const weekChart = useMemo(() => {
+    const days = Array.isArray(weekSummary?.days) ? weekSummary.days : [];
+    const maxY = Math.max(1, Number(weekSummary?.totalEmployees) || 0);
+    const w = 920;
+    const h = 180;
+    const padX = 20;
+    const padY = 18;
+    const innerW = w - padX * 2;
+    const innerH = h - padY * 2;
 
-  const employeeNameForRow = (r) => {
-    const uid = r?.user?._id;
-    const name = uid ? nameByUserId.get(String(uid)) : "";
-    if (name) return name;
-    return r?.user?.employeeId || r?.user?.email || "";
-  };
+    const xAt = (i) => padX + (innerW * (days.length <= 1 ? 0 : i / (days.length - 1)));
+    const yAt = (val) => padY + (innerH - (innerH * Math.min(maxY, Math.max(0, val))) / maxY);
+
+    const points = days.map((d, i) => {
+      const yVal = Number(d?.present) || 0;
+      return { x: xAt(i), y: yAt(yVal), date: String(d?.date || ""), value: yVal };
+    });
+
+    if (!points.length) {
+      return { w, h, linePath: "", areaPath: "", points: [], maxY };
+    }
+
+    const linePath = points.map((p, idx) => `${idx === 0 ? "M" : "L"}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+    const areaPath = `${linePath} L${points[points.length - 1].x.toFixed(2)},${(padY + innerH).toFixed(2)} L${points[0].x.toFixed(2)},${(padY + innerH).toFixed(2)} Z`;
+
+    return { w, h, linePath, areaPath, points, maxY };
+  }, [weekSummary]);
 
   return (
     <div>
@@ -336,6 +377,69 @@ const AttendanceAdmin = () => {
           </div>
         </Card>
       ) : null}
+
+      <Card className="pad" style={{ marginBottom: 12 }}>
+        <div className="ui-title">Attendance Status Types</div>
+        <div className="ui-divider" style={{ margin: "10px 0" }} />
+        <div className="ui-small ui-muted" style={{ lineHeight: 1.7 }}>
+          Present
+          <br />
+          Absent
+          <br />
+          Half-day
+          <br />
+          Leave
+        </div>
+      </Card>
+
+      <Card className="pad" style={{ marginBottom: 12 }}>
+        <div className="ui-row between" style={{ flexWrap: "wrap", gap: 10 }}>
+          <div>
+            <div className="ui-title">Weekly Attendance Graph</div>
+            <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+              {weekAnchor.from} - {weekAnchor.to} • Present employees per day
+            </div>
+          </div>
+          <div className="ui-small ui-muted">Y-axis: 0 - {weekSummary?.totalEmployees ?? 0}</div>
+        </div>
+
+        <div style={{ marginTop: 12, overflowX: "auto" }}>
+          {weekLoading ? (
+            <div className="ui-small ui-muted">Loading...</div>
+          ) : weekChart.points.length === 0 ? (
+            <div className="ui-small ui-muted">No data for this week.</div>
+          ) : (
+            <svg width={weekChart.w} height={weekChart.h} viewBox={`0 0 ${weekChart.w} ${weekChart.h}`} role="img" aria-label="Weekly attendance graph">
+              <defs>
+                <linearGradient id="admin_att_fill" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="0%" stopColor="#111827" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+
+              <rect x="0" y="0" width={weekChart.w} height={weekChart.h} fill="#ffffff" />
+
+              <line x1="20" y1="18" x2="20" y2={weekChart.h - 18} stroke="#e5e7eb" strokeWidth="1" />
+              <line x1="20" y1={weekChart.h - 18} x2={weekChart.w - 20} y2={weekChart.h - 18} stroke="#e5e7eb" strokeWidth="1" />
+
+              <path d={weekChart.areaPath} fill="url(#admin_att_fill)" />
+              <path d={weekChart.linePath} fill="none" stroke="#111827" strokeWidth="2" />
+
+              {weekChart.points.map((p) => (
+                <g key={p.date}>
+                  <circle cx={p.x} cy={p.y} r="3" fill="#111827" />
+                  <text x={p.x} y={weekChart.h - 4} textAnchor="middle" fontSize="10" fill="#6b7280">
+                    {String(p.date || "").slice(5)}
+                  </text>
+                </g>
+              ))}
+
+              <text x="6" y="26" fontSize="10" fill="#6b7280">{weekChart.maxY}</text>
+              <text x="6" y={weekChart.h - 18} fontSize="10" fill="#6b7280">0</text>
+            </svg>
+          )}
+        </div>
+      </Card>
 
       <Card className="pad" padded={false}>
         {loading ? (

@@ -192,6 +192,62 @@ const Attendance = () => {
     return out;
   }, [rows, mode, range.from, range.start]);
 
+  const weekChart = useMemo(() => {
+    if (mode !== "Month") {
+      return { labels: [], values: [], w: 920, h: 180, linePath: "", areaPath: "", points: [] };
+    }
+
+    const list = Array.isArray(rows) ? rows : [];
+    const [yy, mm] = String(month || "").split("-").map((x) => Number(x));
+    if (!yy || !mm) {
+      return { labels: [], values: [], w: 920, h: 180, linePath: "", areaPath: "", points: [] };
+    }
+
+    const monthStart = new Date(yy, mm - 1, 1);
+    const monthWeekStart = startOfWeekMonday(monthStart);
+
+    const byWeek = new Map();
+    for (const r of list) {
+      const dateStr = String(r?.date || "");
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) continue;
+      const dt = new Date(dateStr);
+      const wStart = startOfWeekMonday(dt);
+      const idx = Math.max(0, Math.floor((wStart.getTime() - monthWeekStart.getTime()) / (1000 * 60 * 60 * 24 * 7))) + 1;
+      const status = String(r?.status || "Absent");
+      const cur = byWeek.get(idx) || 0;
+      if (status === "Present" || status === "Half-day") byWeek.set(idx, cur + 1);
+      else byWeek.set(idx, cur);
+    }
+
+    const maxWeek = Math.max(1, ...Array.from(byWeek.keys()));
+    const labels = [];
+    const values = [];
+    for (let i = 1; i <= maxWeek; i += 1) {
+      labels.push(`Week ${i}`);
+      values.push(Math.min(7, Number(byWeek.get(i) || 0)));
+    }
+
+    const maxY = 7;
+    const w = 920;
+    const h = 180;
+    const padX = 26;
+    const padY = 18;
+    const innerW = w - padX * 2;
+    const innerH = h - padY * 2;
+
+    const xAt = (i) => padX + (innerW * (values.length <= 1 ? 0 : i / (values.length - 1)));
+    const yAt = (val) => padY + (innerH - (innerH * Math.min(maxY, Math.max(0, val))) / maxY);
+
+    const points = values.map((v, i) => ({ x: xAt(i), y: yAt(v), label: labels[i], value: v }));
+    if (!points.length) {
+      return { labels, values, w, h, linePath: "", areaPath: "", points };
+    }
+
+    const linePath = points.map((p, idx) => `${idx === 0 ? "M" : "L"}${p.x.toFixed(2)},${p.y.toFixed(2)}`).join(" ");
+    const areaPath = `${linePath} L${points[points.length - 1].x.toFixed(2)},${(padY + innerH).toFixed(2)} L${points[0].x.toFixed(2)},${(padY + innerH).toFixed(2)} Z`;
+    return { labels, values, w, h, linePath, areaPath, points };
+  }, [mode, rows, month]);
+
   const titleDateLabel = useMemo(() => {
     if (mode === "Week") {
       return `${range.from} - ${range.to}`;
@@ -280,6 +336,68 @@ const Attendance = () => {
           </Card>
         </div>
       ) : null}
+
+      {mode === "Month" ? (
+        <Card className="pad" style={{ marginBottom: 12 }}>
+          <div className="ui-row between" style={{ flexWrap: "wrap", gap: 10 }}>
+            <div>
+              <div className="ui-title">Monthly Attendance (Weekly)</div>
+              <div className="ui-small ui-muted" style={{ marginTop: 4 }}>Present days per week (0-7)</div>
+            </div>
+          </div>
+
+          <div style={{ marginTop: 12, overflowX: "auto" }}>
+            {loading ? (
+              <div className="ui-small ui-muted">Loading...</div>
+            ) : weekChart.points.length === 0 ? (
+              <div className="ui-small ui-muted">No data.</div>
+            ) : (
+              <svg width={weekChart.w} height={weekChart.h} viewBox={`0 0 ${weekChart.w} ${weekChart.h}`} role="img" aria-label="Monthly weekly attendance graph">
+                <defs>
+                  <linearGradient id="emp_att_fill" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor="#111827" stopOpacity="0.35" />
+                    <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+
+                <rect x="0" y="0" width={weekChart.w} height={weekChart.h} fill="#ffffff" />
+
+                <line x1="26" y1="18" x2="26" y2={weekChart.h - 18} stroke="#e5e7eb" strokeWidth="1" />
+                <line x1="26" y1={weekChart.h - 18} x2={weekChart.w - 26} y2={weekChart.h - 18} stroke="#e5e7eb" strokeWidth="1" />
+
+                <path d={weekChart.areaPath} fill="url(#emp_att_fill)" />
+                <path d={weekChart.linePath} fill="none" stroke="#111827" strokeWidth="2" />
+
+                {weekChart.points.map((p) => (
+                  <g key={p.label}>
+                    <circle cx={p.x} cy={p.y} r="3" fill="#111827" />
+                    <text x={p.x} y={weekChart.h - 4} textAnchor="middle" fontSize="10" fill="#6b7280">
+                      {p.label.replace("Week ", "W")}
+                    </text>
+                  </g>
+                ))}
+
+                <text x="6" y="26" fontSize="10" fill="#6b7280">7</text>
+                <text x="6" y={weekChart.h - 18} fontSize="10" fill="#6b7280">0</text>
+              </svg>
+            )}
+          </div>
+        </Card>
+      ) : null}
+
+      <Card className="pad" style={{ marginBottom: 12 }}>
+        <div className="ui-title">Attendance Status Types</div>
+        <div className="ui-divider" style={{ margin: "10px 0" }} />
+        <div className="ui-small ui-muted" style={{ lineHeight: 1.7 }}>
+          Present
+          <br />
+          Absent
+          <br />
+          Half-day
+          <br />
+          Leave
+        </div>
+      </Card>
 
       <Card className="pad" padded={false}>
         {loading ? (

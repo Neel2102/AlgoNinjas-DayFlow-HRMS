@@ -38,8 +38,9 @@ const AppShell = () => {
       return [
         { key: "Employees", path: "/admin/employees" },
         { key: "Attendance", path: "/admin/attendance" },
-        { key: "Time Off", path: "/admin/leaves" },
+        { key: "Leave Approvals", path: "/admin/leaves" },
         { key: "Payroll", path: "/admin/payroll" },
+        { key: "Reports", path: "/admin/reports" },
       ];
     }
     return [

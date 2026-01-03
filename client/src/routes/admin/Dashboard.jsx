@@ -37,7 +37,7 @@ const AdminDashboard = () => {
 
             <div className="dash-card" onClick={() => navigate("/admin/leaves")} role="button" tabIndex={0}>
               <div>
-                <div className="dash-card-title">Time Off</div>
+                <div className="dash-card-title">Leave Approvals</div>
                 <div className="dash-card-sub">Approve or reject leave requests</div>
               </div>
               <div className="dash-dot present" />
@@ -47,6 +47,14 @@ const AdminDashboard = () => {
               <div>
                 <div className="dash-card-title">Payroll</div>
                 <div className="dash-card-sub">View and update payroll entries</div>
+              </div>
+              <div className="dash-dot present" />
+            </div>
+
+            <div className="dash-card" onClick={() => navigate("/admin/reports")} role="button" tabIndex={0}>
+              <div>
+                <div className="dash-card-title">Analytics & Reports</div>
+                <div className="dash-card-sub">Attendance reports and salary slips</div>
               </div>
               <div className="dash-dot present" />
             </div>

@@ -1,4 +1,5 @@
 import Attendance from "../models/Attendance.js";
+import User from "../models/User.js";
 import { sendError, sendSuccess } from "../utils/responseHandler.js";
 
 const todayKey = () => new Date().toISOString().slice(0, 10);
@@ -87,6 +88,23 @@ const parseRange = (req) => {
   if (from) q.$gte = from;
   if (to) q.$lte = to;
   return Object.keys(q).length > 0 ? q : null;
+};
+
+const startOfWeekMonday = (d) => {
+  const dt = new Date(d);
+  if (Number.isNaN(dt.getTime())) return null;
+  dt.setHours(0, 0, 0, 0);
+  const day = dt.getDay();
+  const diff = (day + 6) % 7;
+  dt.setDate(dt.getDate() - diff);
+  return dt;
+};
+
+const addDays = (d, n) => {
+  const dt = new Date(d);
+  if (Number.isNaN(dt.getTime())) return null;
+  dt.setDate(dt.getDate() + n);
+  return dt;
 };
 
 export const checkIn = async (req, res, next) => {
@@ -179,6 +197,51 @@ export const getMyAttendance = async (req, res, next) => {
 
     const rows = await Attendance.find(filter).sort({ date: -1 });
     return sendSuccess(res, rows);
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const getWeeklySummary = async (req, res, next) => {
+  try {
+    const fromRaw = req.query.from ? String(req.query.from).trim() : null;
+    if (fromRaw && !/^\d{4}-\d{2}-\d{2}$/.test(fromRaw)) {
+      return sendError(res, "from must be in YYYY-MM-DD format", 400);
+    }
+
+    const anchor = fromRaw ? new Date(fromRaw) : new Date();
+    const start = startOfWeekMonday(anchor);
+    if (!start) return sendError(res, "Invalid date", 400);
+    const end = addDays(start, 6);
+    const from = isoDateKey(start);
+    const to = isoDateKey(end);
+
+    const [totalEmployees, rows] = await Promise.all([
+      User.countDocuments({ role: "employee" }),
+      Attendance.find({ date: { $gte: from, $lte: to } }).select("date status").lean(),
+    ]);
+
+    const byDate = new Map();
+    for (const r of rows || []) {
+      const key = String(r?.date || "");
+      if (!key) continue;
+      const status = String(r?.status || "Absent");
+      const cur = byDate.get(key) || { present: 0, leave: 0 };
+      if (status === "Present" || status === "Half-day") cur.present += 1;
+      else if (status === "Leave") cur.leave += 1;
+      byDate.set(key, cur);
+    }
+
+    const days = [];
+    for (let i = 0; i < 7; i += 1) {
+      const d = addDays(start, i);
+      const key = isoDateKey(d);
+      const cur = byDate.get(key) || { present: 0, leave: 0 };
+      const absent = Math.max(0, (Number(totalEmployees) || 0) - (Number(cur.present) || 0) - (Number(cur.leave) || 0));
+      days.push({ date: key, present: cur.present, leave: cur.leave, absent });
+    }
+
+    return sendSuccess(res, { from, to, totalEmployees, days });
   } catch (err) {
     next(err);
   }

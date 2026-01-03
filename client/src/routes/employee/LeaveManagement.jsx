@@ -29,6 +29,7 @@ const LeaveManagement = () => {
   const [endDate, setEndDate] = useState(() => isoDateKey(new Date()));
   const [remarks, setRemarks] = useState("");
   const [attachmentName, setAttachmentName] = useState("");
+  const [attachmentFile, setAttachmentFile] = useState(null);
 
   const [showNewModal, setShowNewModal] = useState(false);
   const [activeTab, setActiveTab] = useState("timeoff");
@@ -87,10 +88,28 @@ const LeaveManagement = () => {
     setError("");
     setSuccess("");
     try {
-      await leaveService.applyLeave({ type, startDate, endDate, remarks, attachmentName });
+      let attachmentUrl = "";
+      let finalAttachmentName = String(attachmentName || "");
+      if (attachmentFile) {
+        const fileToDataUrl = (file) => {
+          return new Promise((resolve, reject) => {
+            const reader = new FileReader();
+            reader.onload = () => resolve(String(reader.result || ""));
+            reader.onerror = () => reject(new Error("Failed to read file"));
+            reader.readAsDataURL(file);
+          });
+        };
+        const dataUrl = await fileToDataUrl(attachmentFile);
+        const uploaded = await leaveService.uploadLeaveAttachment({ dataUrl, fileName: attachmentFile.name });
+        attachmentUrl = uploaded?.attachmentUrl || "";
+        finalAttachmentName = uploaded?.attachmentName || attachmentFile.name;
+      }
+
+      await leaveService.applyLeave({ type, startDate, endDate, remarks, attachmentName: finalAttachmentName, attachmentUrl });
       setSuccess("Leave request submitted");
       setRemarks("");
       setAttachmentName("");
+      setAttachmentFile(null);
       await load();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -169,7 +188,11 @@ const LeaveManagement = () => {
             <input
               className="ui-input"
               type="file"
-              onChange={(e) => setAttachmentName(e.target?.files?.[0]?.name || "")}
+              onChange={(e) => {
+                const f = e.target?.files?.[0] || null;
+                setAttachmentFile(f);
+                setAttachmentName(f?.name || "");
+              }}
             />
             <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
               {attachmentName ? `Selected: ${attachmentName}` : "Optional (e.g. sick leave certificate)"}
@@ -228,12 +251,13 @@ const LeaveManagement = () => {
                     <th>End Date</th>
                     <th>Time off Type</th>
                     <th>Status</th>
+                    <th>Admin Remark</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredRows.length === 0 ? (
                     <tr>
-                      <td colSpan={5}>No time off requests yet.</td>
+                      <td colSpan={6}>No time off requests yet.</td>
                     </tr>
                   ) : (
                     filteredRows.map((r) => (
@@ -243,6 +267,7 @@ const LeaveManagement = () => {
                         <td>{r?.endDate ? isoDateKey(r.endDate) : ""}</td>
                         <td>{r?.type || ""}</td>
                         <td>{r?.status || ""}</td>
+                        <td>{r?.adminComment || ""}</td>
                       </tr>
                     ))
                   )}

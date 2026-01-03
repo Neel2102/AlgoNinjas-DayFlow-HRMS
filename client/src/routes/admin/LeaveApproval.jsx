@@ -28,6 +28,7 @@ const LeaveApproval = () => {
   const [selectedUserId, setSelectedUserId] = useState("");
   const [status, setStatus] = useState("");
   const [decision, setDecision] = useState({ open: false, id: "", action: "", comment: "" });
+  const [details, setDetails] = useState({ open: false, row: null });
 
   const [activeTab, setActiveTab] = useState("timeoff");
 
@@ -83,6 +84,19 @@ const LeaveApproval = () => {
     setDecision({ open: true, id, action, comment: "" });
   };
 
+  const openDetails = (row) => {
+    setError("");
+    setDetails({ open: true, row: row || null });
+  };
+
+  const closeDetails = () => setDetails({ open: false, row: null });
+
+  const remaining = (balance, key) => {
+    const allocated = Number(balance?.[key]?.allocated) || 0;
+    const used = Number(balance?.[key]?.used) || 0;
+    return Math.max(0, allocated - used);
+  };
+
   const submitDecision = async () => {
     const { id, action, comment } = decision || {};
     if (!id || !action) return;
@@ -116,7 +130,7 @@ const LeaveApproval = () => {
     <div>
       <div className="ui-row between" style={{ marginBottom: 12, flexWrap: "wrap", gap: 12 }}>
         <div>
-          <h1 className="ui-h1">Time Off</h1>
+          <h1 className="ui-h1">Leave Approvals</h1>
           <div className="ui-small ui-muted" style={{ marginTop: 4 }}>Admin / HR approvals</div>
         </div>
 
@@ -161,14 +175,118 @@ const LeaveApproval = () => {
             <div className="ui-title">Note</div>
             <div className="ui-divider" style={{ margin: "10px 0" }} />
             <div className="ui-small ui-muted" style={{ lineHeight: 1.6 }}>
-              Employees can view only their own time off records. Admins and HR officers can view and approve/reject requests for all employees.
+              Employees can view only their own leave records. Admins and HR officers can view and approve/reject requests for all employees.
             </div>
           </Card>
         </div>
       ) : (
         <>
           <Modal
-            title={decision?.action === "approve" ? "Approve Time Off" : "Reject Time Off"}
+            title="Leave Request Details"
+            open={Boolean(details?.open)}
+            onClose={closeDetails}
+          >
+            {(() => {
+              const r = details?.row;
+              if (!r) return null;
+              const emp = r?.employee || null;
+              const balance = emp?.leaveBalance || null;
+              const type = String(r?.type || "");
+              const days = Number(r?.days) || 0;
+              const start = r?.startDate ? isoDateKey(r.startDate) : "";
+              const end = r?.endDate ? isoDateKey(r.endDate) : "";
+              const pending = r?.status === "Pending";
+              const paidLeft = remaining(balance, "paid");
+              const sickLeft = remaining(balance, "sick");
+
+              return (
+                <div style={{ display: "grid", gap: 12 }}>
+                  <div className="ui-row" style={{ gap: 12, alignItems: "center" }}>
+                    <div className="ui-avatar" style={{ width: 44, height: 44 }}>
+                      {emp?.profilePictureUrl ? (
+                        <img
+                          src={emp.profilePictureUrl}
+                          alt="profile"
+                          style={{ width: "100%", height: "100%", borderRadius: 999, objectFit: "cover" }}
+                        />
+                      ) : (
+                        String(emp?.fullName || r?.employeeName || r?.user?.employeeId || "U").slice(0, 1).toUpperCase()
+                      )}
+                    </div>
+                    <div style={{ display: "grid", gap: 2 }}>
+                      <div style={{ fontWeight: 900 }}>{emp?.fullName || r?.employeeName || ""}</div>
+                      <div className="ui-small ui-muted">{r?.user?.employeeId || ""} {r?.user?.email ? `• ${r.user.email}` : ""}</div>
+                    </div>
+                  </div>
+
+                  <div className="ui-divider" />
+
+                  <div className="ui-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", gap: 10 }}>
+                    <div>
+                      <div className="ui-small ui-muted">Type</div>
+                      <div style={{ fontWeight: 800 }}>{type}</div>
+                    </div>
+                    <div>
+                      <div className="ui-small ui-muted">Status</div>
+                      <div style={{ fontWeight: 800 }}>{r?.status || ""}</div>
+                    </div>
+                    <div>
+                      <div className="ui-small ui-muted">Start</div>
+                      <div style={{ fontWeight: 800 }}>{start}</div>
+                    </div>
+                    <div>
+                      <div className="ui-small ui-muted">End</div>
+                      <div style={{ fontWeight: 800 }}>{end}</div>
+                    </div>
+                    <div>
+                      <div className="ui-small ui-muted">Days</div>
+                      <div style={{ fontWeight: 800 }}>{days || ""}</div>
+                    </div>
+                    <div>
+                      <div className="ui-small ui-muted">Remaining balance</div>
+                      <div style={{ fontWeight: 800 }}>Paid: {paidLeft}d • Sick: {sickLeft}d</div>
+                    </div>
+                  </div>
+
+                  {r?.remarks ? (
+                    <div>
+                      <div className="ui-small ui-muted">Remarks</div>
+                      <div style={{ marginTop: 4, whiteSpace: "pre-wrap" }}>{r.remarks}</div>
+                    </div>
+                  ) : null}
+
+                  {r?.attachmentUrl ? (
+                    <div>
+                      <div className="ui-small ui-muted">Attachment</div>
+                      <div style={{ marginTop: 6, display: "grid", gap: 8 }}>
+                        <a href={r.attachmentUrl} target="_blank" rel="noreferrer">{r?.attachmentName || "Open attachment"}</a>
+                        {String(r.attachmentUrl).match(/\.(png|jpg|jpeg|webp|gif)(\?.*)?$/i) ? (
+                          <img src={r.attachmentUrl} alt="attachment" style={{ width: "100%", borderRadius: 12 }} />
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {pending ? (
+                    <div className="ui-row between" style={{ gap: 10 }}>
+                      <Button variant="ghost" onClick={closeDetails}>Close</Button>
+                      <div className="ui-row gap-8" style={{ flexWrap: "wrap" }}>
+                        <Button variant="danger" onClick={() => { closeDetails(); openDecision({ id: r?._id, action: "reject" }); }}>Reject</Button>
+                        <Button variant="success" onClick={() => { closeDetails(); openDecision({ id: r?._id, action: "approve" }); }}>Approve</Button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="ui-row" style={{ justifyContent: "flex-end" }}>
+                      <Button variant="ghost" onClick={closeDetails}>Close</Button>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
+          </Modal>
+
+          <Modal
+            title={decision?.action === "approve" ? "Approve Leave" : "Reject Leave"}
             open={Boolean(decision?.open)}
             onClose={() => setDecision({ open: false, id: "", action: "", comment: "" })}
           >
@@ -194,6 +312,17 @@ const LeaveApproval = () => {
             </div>
           </Modal>
 
+          <div className="ui-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginBottom: 12, gap: 12 }}>
+            <Card className="pad">
+              <div className="ui-title">Paid leave</div>
+              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>24 Days Available</div>
+            </Card>
+            <Card className="pad">
+              <div className="ui-title">Sick leave</div>
+              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>07 Days Available</div>
+            </Card>
+          </div>
+
           <Card className="pad" padded={false}>
           {loading ? (
             <div className="pad" style={{ padding: 16 }}>
@@ -206,7 +335,7 @@ const LeaveApproval = () => {
                   <th>Name</th>
                   <th>Start Date</th>
                   <th>End Date</th>
-                  <th>Time off Type</th>
+                  <th>Leave Type</th>
                   <th>Status</th>
                   <th>Actions</th>
                 </tr>
@@ -214,7 +343,7 @@ const LeaveApproval = () => {
               <tbody>
                 {filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan={6}>No time off requests found.</td>
+                    <td colSpan={6}>No leave requests found.</td>
                   </tr>
                 ) : (
                   filteredRows.map((r) => {
@@ -234,6 +363,11 @@ const LeaveApproval = () => {
                               <Button variant="success" onClick={() => openDecision({ id, action: "approve" })}>Approve</Button>
                             </div>
                           ) : null}
+                          <div className="ui-row gap-8" style={{ flexWrap: "wrap" }}>
+                            <Button variant="ghost" onClick={() => openDetails(r)}>View</Button>
+                            <Button variant="danger" disabled={!pending} onClick={() => openDecision({ id, action: "reject" })}>Reject</Button>
+                            <Button variant="success" disabled={!pending} onClick={() => openDecision({ id, action: "approve" })}>Approve</Button>
+                          </div>
                         </td>
                       </tr>
                     );

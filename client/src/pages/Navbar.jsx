@@ -20,7 +20,6 @@ class Navbar extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      isMenuOpen: false,
       isScrolled: false,
       isLoggedIn: false, 
       avatarUrl: "",
@@ -79,23 +78,13 @@ class Navbar extends Component {
     }
   };
 
-  toggleMenu = () => {
-    this.setState(prevState => ({
-      isMenuOpen: !prevState.isMenuOpen
-    }));
-  };
-
-  closeMenu = () => {
-    this.setState({ isMenuOpen: false });
-  };
-
   handleLogout = () => {
     if (this.props.onLogout) this.props.onLogout();
     this.setState({ isLoggedIn: false, avatarUrl: "" });
   };
 
   render() {
-    const { isMenuOpen, isScrolled } = this.state;
+    const { isScrolled } = this.state;
     const isLoggedIn = Boolean(this.props.isAuthenticated) || this.state.isLoggedIn;
     const username = this.props.user?.email || "";
     const avatarUrl = this.state.avatarUrl || "";
@@ -113,13 +102,7 @@ class Navbar extends Component {
           </div>
 
           {/* Desktop Navigation Links */}
-          <div className="navbar-links-navbar">
-            <a href="#features" className="navbar-link-navbar">Features</a>
-            <a href="#solutions" className="navbar-link-navbar">Solutions</a>
-            <a href="#pricing" className="navbar-link-navbar">Pricing</a>
-            <a href="#resources" className="navbar-link-navbar">Resources</a>
-            <a href="#about" className="navbar-link-navbar">About</a>
-          </div>
+          <div className="navbar-links-navbar" />
 
           {/* Desktop Auth Buttons */}
           <div className="navbar-auth-navbar">
@@ -133,6 +116,7 @@ class Navbar extends Component {
                   )}
                 </div>
                 <span className="navbar-username-navbar">{username || "User"}</span>
+                <Link className="navbar-btn-login-navbar" to="/dashboard">Open App</Link>
                 <button className="navbar-logout-navbar" onClick={this.handleLogout}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -148,69 +132,7 @@ class Navbar extends Component {
               </>
             )}
           </div>
-
-          {/* Mobile Menu Toggle */}
-          <button 
-            className={`navbar-hamburger-navbar ${isMenuOpen ? 'active-navbar' : ''}`}
-            onClick={this.toggleMenu}
-            aria-label="Toggle menu"
-          >
-            <span></span>
-            <span></span>
-            <span></span>
-          </button>
         </div>
-
-        {/* Mobile Menu */}
-        <div className={`navbar-mobile-menu-navbar ${isMenuOpen ? 'open-navbar' : ''}`}>
-          <div className="navbar-mobile-links-navbar">
-            <a href="#features" className="navbar-mobile-link-navbar" onClick={this.closeMenu}>
-              Features
-            </a>
-            <a href="#solutions" className="navbar-mobile-link-navbar" onClick={this.closeMenu}>
-              Solutions
-            </a>
-            <a href="#pricing" className="navbar-mobile-link-navbar" onClick={this.closeMenu}>
-              Pricing
-            </a>
-            <a href="#resources" className="navbar-mobile-link-navbar" onClick={this.closeMenu}>
-              Resources
-            </a>
-            <a href="#about" className="navbar-mobile-link-navbar" onClick={this.closeMenu}>
-              About
-            </a>
-          </div>
-
-          <div className="navbar-mobile-auth-navbar">
-            {isLoggedIn ? (
-              <>
-                <div className="navbar-mobile-profile-navbar">
-                  <div className="navbar-mobile-avatar-navbar">
-                    {avatarUrl ? (
-                      <img src={avatarUrl} alt="profile" />
-                    ) : (
-                      <span>{avatarFallback}</span>
-                    )}
-                  </div>
-                  <span className="navbar-mobile-username-navbar">{username || "User"}</span>
-                </div>
-                <button className="navbar-mobile-logout-navbar" onClick={this.handleLogout}>
-                  Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link className="navbar-mobile-btn-login-navbar" to="/signin" onClick={this.closeMenu}>Login</Link>
-                <Link className="navbar-mobile-btn-signup-navbar" to="/signup" onClick={this.closeMenu}>Sign Up</Link>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Overlay */}
-        {isMenuOpen && (
-          <div className="navbar-overlay-navbar" onClick={this.closeMenu}></div>
-        )}
       </nav>
     );
   }

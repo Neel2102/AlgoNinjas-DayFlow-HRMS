@@ -9,6 +9,10 @@ import transporter from "../config/nodemailer.js";
 
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 
+const isEmployeeSignupAllowed = () => {
+  return String(process.env.DEMO_ALLOW_EMPLOYEE_SIGNUP || "false") === "true";
+};
+
 const validatePassword = (password) => {
   const p = String(password || "");
   if (p.length < 8) return "Password must be at least 8 characters";
@@ -99,6 +103,9 @@ export const signUp = async (req, res, next) => {
     if (existing) return sendError(res, "User already exists", 409);
 
     let finalRole = "employee";
+    if ((role === "employee" || !role) && !isEmployeeSignupAllowed()) {
+      return sendError(res, "Self signup is disabled. Please contact HR/Admin.", 403);
+    }
     if (role === "admin") {
       const required = String(process.env.ADMIN_SIGNUP_SECRET || "").trim();
       const provided = String(adminSecret || "").trim();
@@ -180,7 +187,15 @@ export const signIn = async (req, res, next) => {
     const { email, password } = req.body;
     if (!email || !password) return sendError(res, "email and password are required", 400);
 
-    const user = await User.findOne({ email: normalizeEmail(email) });
+    const login = String(email || "").trim();
+    const loginLower = login.toLowerCase();
+    const emailCandidate = loginLower.includes("@") ? normalizeEmail(loginLower) : null;
+
+    const user = await User.findOne(
+      emailCandidate
+        ? { $or: [{ email: emailCandidate }, { employeeId: login }] }
+        : { employeeId: login }
+    );
     if (!user) return sendError(res, "Invalid credentials", 401);
 
     const ok = await bcrypt.compare(String(password), user.passwordHash);

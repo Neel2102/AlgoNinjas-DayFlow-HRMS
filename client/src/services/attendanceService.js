@@ -47,3 +47,10 @@ export const listPresentByDate = async ({ date } = {}) => {
   const res = await api.get("/attendance/present", { params });
   return unwrap(res);
 };
+
+export const getWeeklySummary = async ({ from } = {}) => {
+  const params = {};
+  if (from) params.from = from;
+  const res = await api.get("/attendance/weekly-summary", { params });
+  return unwrap(res);
+};

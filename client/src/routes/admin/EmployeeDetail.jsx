@@ -88,6 +88,12 @@ const EmployeeDetail = () => {
   const computedMonthlyWage = totals.earnings;
   const computedYearlyWage = totals.earnings * 12;
 
+  const remaining = (balance, key) => {
+    const allocated = Number(balance?.[key]?.allocated) || 0;
+    const used = Number(balance?.[key]?.used) || 0;
+    return Math.max(0, allocated - used);
+  };
+
   const syncFormFromEmployee = (emp) => {
     const s = emp?.salary || {};
     setSalary({
@@ -292,6 +298,32 @@ const EmployeeDetail = () => {
                 {employee?.user?.employeeId || ""}
                 {employee?.user?.email ? ` • ${employee.user.email}` : ""}
                 {employee?.user?.role ? ` • ${employee.user.role}` : ""}
+              </div>
+            </div>
+          </div>
+
+          <div className="att-table-wrap" style={{ marginBottom: 14 }}>
+            <div style={{ padding: 12 }}>
+              <div style={{ fontWeight: 800, marginBottom: 10 }}>Leave Balance</div>
+              <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10 }}>
+                <div className="dash-note" style={{ marginTop: 0 }}>
+                  Paid: {remaining(employee?.leaveBalance, "paid")}d remaining
+                  <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+                    Used: {Number(employee?.leaveBalance?.paid?.used) || 0}d / Allocated: {Number(employee?.leaveBalance?.paid?.allocated) || 0}d
+                  </div>
+                </div>
+                <div className="dash-note" style={{ marginTop: 0 }}>
+                  Sick: {remaining(employee?.leaveBalance, "sick")}d remaining
+                  <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+                    Used: {Number(employee?.leaveBalance?.sick?.used) || 0}d / Allocated: {Number(employee?.leaveBalance?.sick?.allocated) || 0}d
+                  </div>
+                </div>
+                <div className="dash-note" style={{ marginTop: 0 }}>
+                  Pending: {employee?.leaveStats?.pendingCount ?? 0} requests ({employee?.leaveStats?.pendingDays ?? 0}d)
+                  <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+                    Approved: {employee?.leaveStats?.approvedCount ?? 0} ({employee?.leaveStats?.approvedDays ?? 0}d)
+                  </div>
+                </div>
               </div>
             </div>
           </div>

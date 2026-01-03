@@ -93,6 +93,19 @@ const employeeSchema = new mongoose.Schema(
       ],
       default: [],
     },
+    leaveBalance: {
+      paid: {
+        allocated: { type: Number, default: 24 },
+        used: { type: Number, default: 0 },
+      },
+      sick: {
+        allocated: { type: Number, default: 7 },
+        used: { type: Number, default: 0 },
+      },
+      unpaid: {
+        used: { type: Number, default: 0 },
+      },
+    },
   },
   { timestamps: true }
 );

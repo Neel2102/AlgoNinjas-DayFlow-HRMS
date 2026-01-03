@@ -19,8 +19,8 @@ const LandingPage = () => {
               Built for teams that value efficiency and growth.
             </p>
             <div className="hero-buttons-landingpage">
-              <button className="btn-primary-landingpage" onClick={() => navigate("/signin")}>Get start</button>
-              {/* <button className="btn-secondary-landingpage">Watch Demo</button> */}
+              <button className="btn-primary-landingpage" onClick={() => navigate("/signin")}>Login</button>
+              <button className="btn-secondary-landingpage" onClick={() => navigate("/signup")}>Sign Up</button>
             </div>
             <div className="hero-stats-landingpage">
               <div className="stat-item-landingpage">

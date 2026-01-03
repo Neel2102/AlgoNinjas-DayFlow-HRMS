@@ -5,6 +5,7 @@ import {
   listLeaves,
   myLeaves,
   rejectLeave,
+  uploadLeaveAttachment,
 } from "../controllers/leaveController.js";
 import { requireAuth } from "../middlewares/authMiddleware.js";
 import { requireRole } from "../middlewares/roleMiddleware.js";
@@ -12,6 +13,7 @@ import { requireRole } from "../middlewares/roleMiddleware.js";
 const router = express.Router();
 
 router.post("/", requireAuth, applyLeave);
+router.post("/upload", requireAuth, uploadLeaveAttachment);
 router.get("/me", requireAuth, myLeaves);
 
 router.get("/", requireAuth, requireRole("admin", "hr"), listLeaves);

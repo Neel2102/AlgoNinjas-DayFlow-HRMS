@@ -1,7 +1,7 @@
 import './App.css'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import LandingPage from './pages/landingpage'
-import Navbar from './pages/navbar'
+import Navbar from './pages/Navbar'
 import SignIn from "./routes/auth/SignIn";
 import SignUp from "./routes/auth/SignUp";
 import VerifyOtp from "./routes/auth/VerifyOtp";
@@ -22,6 +22,7 @@ import PayrollManagement from "./routes/admin/PayrollManagement";
 import AdminDashboard from "./routes/admin/Dashboard";
 import EmployeeList from "./routes/admin/EmployeeList";
 import AttendanceManagement from "./routes/admin/AttendanceManagement";
+import Reports from "./routes/admin/Reports";
 
 function Layout() {
   const location = useLocation();
@@ -62,6 +63,7 @@ function Layout() {
               <Route path="/admin/attendance-management" element={<AttendanceManagement />} />
               <Route path="/admin/leaves" element={<LeaveApproval />} />
               <Route path="/admin/payroll" element={<PayrollManagement />} />
+              <Route path="/admin/reports" element={<Reports />} />
             </Route>
           </Route>
         </Route>
