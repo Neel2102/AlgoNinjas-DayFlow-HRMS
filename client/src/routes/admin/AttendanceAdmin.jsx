@@ -103,7 +103,7 @@ const rowStyle = (r) => {
   }
 
   if (status === "Present" || status === "Half-day") {
-    return { background: "#dcfce7" };
+    return {};
   }
 
   if (status === "Leave") {
@@ -254,6 +254,24 @@ const AttendanceAdmin = () => {
     })).filter((x) => x.id);
   }, [employees]);
 
+  const nameByUserId = useMemo(() => {
+    const m = new Map();
+    for (const e of employees || []) {
+      const id = e?.user?._id;
+      if (!id) continue;
+      const name = String(e?.personal?.fullName || "").trim();
+      if (name) m.set(String(id), name);
+    }
+    return m;
+  }, [employees]);
+
+  const employeeNameForRow = (r) => {
+    const uid = r?.user?._id;
+    const name = uid ? nameByUserId.get(String(uid)) : "";
+    if (name) return name;
+    return r?.user?.employeeId || r?.user?.email || "";
+  };
+
   return (
     <div>
       <div className="ui-row between" style={{ marginBottom: 12, flexWrap: "wrap", gap: 12 }}>
@@ -329,6 +347,7 @@ const AttendanceAdmin = () => {
             <thead>
               <tr>
                 <th>Employee ID</th>
+                <th>Name</th>
                 <th>Email</th>
                 <th>Status</th>
                 <th>Check In</th>
@@ -341,12 +360,13 @@ const AttendanceAdmin = () => {
             <tbody>
               {presentRows.length === 0 ? (
                 <tr>
-                  <td colSpan={8}>No present employees for this day.</td>
+                  <td colSpan={9}>No present employees for this day.</td>
                 </tr>
               ) : (
                 presentRows.map((r) => (
                   <tr key={r?._id || `${r?.user?._id}-${r?.date}`} style={rowStyle(r)}> 
                     <td>{r?.user?.employeeId || ""}</td>
+                    <td>{employeeNameForRow(r)}</td>
                     <td>{r?.user?.email || ""}</td>
                     <td>{r?.status || ""}</td>
                     <td>{formatTime(r?.checkInAt)}</td>
@@ -365,6 +385,7 @@ const AttendanceAdmin = () => {
               <tr>
                 <th>Date</th>
                 <th>Employee ID</th>
+                <th>Name</th>
                 <th>Email</th>
                 <th>Status</th>
                 <th>Check In</th>
@@ -379,6 +400,7 @@ const AttendanceAdmin = () => {
                 <tr key={r?._id || `${r?.user?._id || "none"}-${r?.date}`} style={rowStyle(r)}>
                   <td>{r?.date || ""}</td>
                   <td>{r?.user?.employeeId || ""}</td>
+                  <td>{employeeNameForRow(r)}</td>
                   <td>{r?.user?.email || ""}</td>
                   <td>{r?.status || ""}</td>
                   <td>{formatTime(r?.checkInAt)}</td>

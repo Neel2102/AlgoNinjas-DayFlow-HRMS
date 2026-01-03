@@ -44,6 +44,24 @@ const PayrollManagement = () => {
       .filter((x) => x.id);
   }, [employees]);
 
+  const nameByUserId = useMemo(() => {
+    const m = new Map();
+    for (const e of employees || []) {
+      const id = e?.user?._id;
+      if (!id) continue;
+      const name = String(e?.personal?.fullName || "").trim();
+      if (name) m.set(String(id), name);
+    }
+    return m;
+  }, [employees]);
+
+  const employeeNameForRow = (r) => {
+    const uid = r?.user?._id;
+    const name = uid ? nameByUserId.get(String(uid)) : "";
+    if (name) return name;
+    return r?.user?.employeeId || r?.user?.email || "";
+  };
+
   useEffect(() => {
     let mounted = true;
     const run = async () => {
@@ -169,6 +187,7 @@ const PayrollManagement = () => {
                   <tr>
                     <th>Month</th>
                     <th>Employee ID</th>
+                    <th>Name</th>
                     <th>Email</th>
                     <th>Payable Days</th>
                     <th>Unpaid</th>
@@ -183,13 +202,14 @@ const PayrollManagement = () => {
                 <tbody>
                   {rows.length === 0 ? (
                     <tr>
-                      <td colSpan={11}>No payroll records.</td>
+                      <td colSpan={12}>No payroll records.</td>
                     </tr>
                   ) : (
                     rows.map((r) => (
                       <tr key={r?._id || `${r?.user?._id}-${r?.month}`}> 
                         <td>{r?.month || ""}</td>
                         <td>{r?.user?.employeeId || ""}</td>
+                        <td>{employeeNameForRow(r)}</td>
                         <td>{r?.user?.email || ""}</td>
                         <td>{r?.payableDays ?? ""}</td>
                         <td>{r?.unpaidLeaveDays ?? ""}</td>

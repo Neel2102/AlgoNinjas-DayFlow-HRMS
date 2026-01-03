@@ -262,6 +262,14 @@
   min-width: 640px;
 }
 
+.att-table tbody tr {
+  transition: background-color 0.2s ease;
+}
+
+.att-table tbody tr:hover {
+  background: var(--hover-light);
+}
+
 .att-table th,
 .att-table td {
   text-align: left;
