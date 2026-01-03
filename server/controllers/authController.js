@@ -4,8 +4,8 @@ import crypto from "crypto";
 import User from "../models/User.js";
 import Employee from "../models/Employee.js";
 import { signToken } from "../config/jwt.js";
-import { sendEmail } from "../utils/emailService.js";
 import { sendError, sendSuccess } from "../utils/responseHandler.js";
+import transporter from "../config/nodemailer.js";
 
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 
@@ -27,13 +27,42 @@ const sendEmailOtp = async (user) => {
   user.emailVerificationTokenExpiresAt = null;
   await user.save();
 
-  await sendEmail({
+  await transporter.sendMail({
+    from: process.env.SENDER_EMAIL || process.env.SMTP_USER,
     to: user.email,
     subject: "Dayflow HRMS - Email Verification OTP",
     html: `
       <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <div style="font-size: 20px; font-weight: 900; letter-spacing: 0.6px; margin: 0 0 14px;">Dayflow HRMS AlgoNinjas</div>
         <h2 style="margin: 0 0 10px;">Verify your email</h2>
         <p>Your OTP for email verification is:</p>
+        <div style="font-size: 26px; font-weight: 800; letter-spacing: 4px; padding: 10px 14px; display: inline-block; border: 1px solid #ddd; border-radius: 10px;">
+          ${otp}
+        </div>
+        <p style="margin-top: 14px;">This OTP will expire in <b>10 minutes</b>.</p>
+        <p style="color: #666; font-size: 12px;">If you did not request this, you can ignore this email.</p>
+      </div>
+    `,
+  });
+};
+
+const sendPasswordResetOtp = async (user) => {
+  const otp = generateOtp();
+  const otpHash = await bcrypt.hash(otp, 10);
+
+  user.passwordResetOtpHash = otpHash;
+  user.passwordResetOtpExpiresAt = new Date(Date.now() + 1000 * 60 * 10);
+  await user.save();
+
+  await transporter.sendMail({
+    from: process.env.SENDER_EMAIL || process.env.SMTP_USER,
+    to: user.email,
+    subject: "Dayflow HRMS - Password Reset OTP",
+    html: `
+      <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+        <div style="font-size: 20px; font-weight: 900; letter-spacing: 0.6px; margin: 0 0 14px;">Dayflow HRMS AlgoNinjas</div>
+        <h2 style="margin: 0 0 10px;">Reset your password</h2>
+        <p>Your OTP for password reset is:</p>
         <div style="font-size: 26px; font-weight: 800; letter-spacing: 4px; padding: 10px 14px; display: inline-block; border: 1px solid #ddd; border-radius: 10px;">
           ${otp}
         </div>
@@ -88,6 +117,22 @@ export const signUp = async (req, res, next) => {
     });
 
     await Employee.create({ user: user._id });
+    const mailOptions = {
+            from: process.env.SENDER_EMAIL,
+            to: email,
+            subject: 'Welcome to <name>',
+            html: `
+              <div style="font-family: Arial, sans-serif; line-height: 1.6;">
+                <div style="font-size: 22px; font-weight: 900; letter-spacing: 0.6px; margin: 0 0 14px;">Dayflow HRMS AlgoNinjas</div>
+                <h2 style="margin: 0 0 10px;">Welcome!</h2>
+                <p>Welcome to our web-app. Your account has been created successfully with:</p>
+                <div style="font-weight: 700; margin: 10px 0;">${user.email}</div>
+                <p style="color: #666; font-size: 12px; margin-top: 14px;">If you did not request this, you can ignore this email.</p>
+              </div>
+            `,
+
+        }
+     await transporter.sendMail(mailOptions);
 
     if (!user.isEmailVerified) {
       await sendEmailOtp(user);
@@ -213,6 +258,57 @@ export const resendOtp = async (req, res, next) => {
 
     await sendEmailOtp(user);
     return sendSuccess(res, { email: user.email, verificationRequired: true }, "OTP sent");
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const forgotPassword = async (req, res, next) => {
+  try {
+    const email = normalizeEmail(req.body?.email);
+    if (!email) return sendError(res, "email is required", 400);
+
+    const user = await User.findOne({ email });
+    if (user) {
+      await sendPasswordResetOtp(user);
+    }
+
+    return sendSuccess(
+      res,
+      { email },
+      "If an account exists for this email, an OTP has been sent"
+    );
+  } catch (err) {
+    next(err);
+  }
+};
+
+export const resetPassword = async (req, res, next) => {
+  try {
+    const email = normalizeEmail(req.body?.email);
+    const otp = String(req.body?.otp || "").trim();
+    const newPassword = String(req.body?.newPassword || "");
+    if (!email || !otp || !newPassword) return sendError(res, "email, otp and newPassword are required", 400);
+
+    const user = await User.findOne({ email });
+    if (!user) return sendError(res, "Invalid OTP", 400);
+
+    if (!user.passwordResetOtpHash || !user.passwordResetOtpExpiresAt) {
+      return sendError(res, "OTP not requested", 400);
+    }
+    if (user.passwordResetOtpExpiresAt < new Date()) {
+      return sendError(res, "OTP expired", 400);
+    }
+
+    const ok = await bcrypt.compare(otp, user.passwordResetOtpHash);
+    if (!ok) return sendError(res, "Invalid OTP", 400);
+
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    user.passwordResetOtpHash = null;
+    user.passwordResetOtpExpiresAt = null;
+    await user.save();
+
+    return sendSuccess(res, { email: user.email }, "Password reset successful");
   } catch (err) {
     next(err);
   }

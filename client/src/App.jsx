@@ -5,6 +5,8 @@ import Navbar from './pages/navbar'
 import SignIn from "./routes/auth/SignIn";
 import SignUp from "./routes/auth/SignUp";
 import VerifyOtp from "./routes/auth/VerifyOtp";
+import ForgotPassword from "./routes/auth/ForgotPassword";
+import ResetPassword from "./routes/auth/ResetPassword";
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import AppShell from "./components/common/AppShell";
 import Dashboard from "./routes/employee/Dashboard";
@@ -41,6 +43,8 @@ function Layout() {
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
 
         <Route element={<ProtectedRoute />}>
           <Route element={<AppShell />}>

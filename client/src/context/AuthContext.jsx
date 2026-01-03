@@ -90,6 +90,28 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const forgotPassword = async ({ email }) => {
+    setLoading(true);
+    try {
+      const res = await authService.forgotPassword({ email });
+      const payload = extractAuthPayload(res);
+      return payload;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resetPassword = async ({ email, otp, newPassword }) => {
+    setLoading(true);
+    try {
+      const res = await authService.resetPassword({ email, otp, newPassword });
+      const payload = extractAuthPayload(res);
+      return payload;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signOut = async () => {
     await authService.signOut();
     setToken("");
@@ -106,6 +128,8 @@ export const AuthProvider = ({ children }) => {
       signUp,
       verifyOtp,
       resendOtp,
+      forgotPassword,
+      resetPassword,
       signOut,
     }),
     [token, user, loading, isAuthenticated]

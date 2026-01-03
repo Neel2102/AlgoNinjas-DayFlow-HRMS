@@ -28,6 +28,16 @@ export const resendOtp = async ({ email }) => {
   return unwrap(res);
 };
 
+export const forgotPassword = async ({ email }) => {
+  const res = await api.post("/auth/forgot-password", { email });
+  return unwrap(res);
+};
+
+export const resetPassword = async ({ email, otp, newPassword }) => {
+  const res = await api.post("/auth/reset-password", { email, otp, newPassword });
+  return unwrap(res);
+};
+
 export const signOut = async () => {
   return true;
 };

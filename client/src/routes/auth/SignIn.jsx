@@ -88,6 +88,10 @@ const SignIn = () => {
             </button>
           </form>
 
+          <div className="auth-footer" style={{ marginTop: 10 }}>
+            <Link className="auth-link" to="/forgot-password">Forgot password?</Link>
+          </div>
+
           <div className="auth-footer">
             Don&apos;t have an account? <Link className="auth-link" to="/signup">Sign Up</Link>
           </div>
