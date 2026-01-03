@@ -1,5 +1,20 @@
 import React, { Component } from 'react';
+import { Link } from "react-router-dom";
 import '../CSS/Navbar.css';
+
+import { useAuth } from "../context/AuthContext";
+
+const NavbarWithAuth = () => {
+  const { isAuthenticated, user, signOut } = useAuth();
+
+  return (
+    <Navbar
+      isAuthenticated={isAuthenticated}
+      user={user}
+      onLogout={signOut}
+    />
+  );
+};
 
 class Navbar extends Component {
   constructor(props) {
@@ -37,23 +52,15 @@ class Navbar extends Component {
     this.setState({ isMenuOpen: false });
   };
 
-  handleLogin = () => {
-    // Handle login logic
-    console.log('Login clicked');
-  };
-
-  handleSignup = () => {
-    // Handle signup logic
-    console.log('Signup clicked');
-  };
-
   handleLogout = () => {
-    // Handle logout logic
+    if (this.props.onLogout) this.props.onLogout();
     this.setState({ isLoggedIn: false });
   };
 
   render() {
-    const { isMenuOpen, isScrolled, isLoggedIn } = this.state;
+    const { isMenuOpen, isScrolled } = this.state;
+    const isLoggedIn = Boolean(this.props.isAuthenticated) || this.state.isLoggedIn;
+    const username = this.props.user?.email || "";
 
     return (
       <nav className={`navbar-container-navbar ${isScrolled ? 'scrolled-navbar' : ''}`}>
@@ -91,7 +98,7 @@ class Navbar extends Component {
                     <circle cx="12" cy="7" r="4"/>
                   </svg>
                 </div>
-                <span className="navbar-username-navbar">John Doe</span>
+                <span className="navbar-username-navbar">{username || "User"}</span>
                 <button className="navbar-logout-navbar" onClick={this.handleLogout}>
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                     <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
@@ -102,12 +109,8 @@ class Navbar extends Component {
               </div>
             ) : (
               <>
-                <button className="navbar-btn-login-navbar" onClick={this.handleLogin}>
-                  Login
-                </button>
-                <button className="navbar-btn-signup-navbar" onClick={this.handleSignup}>
-                  Sign Up
-                </button>
+                <Link className="navbar-btn-login-navbar" to="/signin">Login</Link>
+                <Link className="navbar-btn-signup-navbar" to="/signup">Sign Up</Link>
               </>
             )}
           </div>
@@ -154,7 +157,7 @@ class Navbar extends Component {
                       <circle cx="12" cy="7" r="4"/>
                     </svg>
                   </div>
-                  <span className="navbar-mobile-username-navbar">John Doe</span>
+                  <span className="navbar-mobile-username-navbar">{username || "User"}</span>
                 </div>
                 <button className="navbar-mobile-logout-navbar" onClick={this.handleLogout}>
                   Logout
@@ -162,12 +165,8 @@ class Navbar extends Component {
               </>
             ) : (
               <>
-                <button className="navbar-mobile-btn-login-navbar" onClick={this.handleLogin}>
-                  Login
-                </button>
-                <button className="navbar-mobile-btn-signup-navbar" onClick={this.handleSignup}>
-                  Sign Up
-                </button>
+                <Link className="navbar-mobile-btn-login-navbar" to="/signin" onClick={this.closeMenu}>Login</Link>
+                <Link className="navbar-mobile-btn-signup-navbar" to="/signup" onClick={this.closeMenu}>Sign Up</Link>
               </>
             )}
           </div>
@@ -182,4 +181,4 @@ class Navbar extends Component {
   }
 }
 
-export default Navbar;
+export default NavbarWithAuth;
