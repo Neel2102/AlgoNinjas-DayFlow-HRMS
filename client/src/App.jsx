@@ -1,7 +1,26 @@
 import './App.css'
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import LandingPage from './pages/landingpage'
 import Navbar from './pages/navbar'
+<<<<<<< HEAD
+import EmployeeDashboard from './pages/Employeedashboard.jsx'
+
+function AppContent() {
+  const location = useLocation();
+  
+  return (
+    <>
+      {/* Only show Navbar if NOT on dashboard route */}
+      {location.pathname !== '/dashboard-employee' && <Navbar />}
+      
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+        <Route path="/dashboard-employee" element={<EmployeeDashboard />} />
+      </Routes>
+    </>
+  );
+}
+=======
 import SignIn from "./routes/auth/SignIn";
 import SignUp from "./routes/auth/SignUp";
 import ProtectedRoute from "./components/common/ProtectedRoute";
@@ -14,6 +33,9 @@ import AttendanceAdmin from "./routes/admin/AttendanceAdmin";
 function App() {
   return (
     <BrowserRouter>
+<<<<<<< HEAD
+      <AppContent />
+=======
       <Navbar />   {/* Header */}
       <Routes>
         <Route path="/" element={<LandingPage />} />
@@ -30,6 +52,7 @@ function App() {
           </Route>
         </Route>
       </Routes>
+>>>>>>> ea58e1b9772c599d604715836b21f6b61e631e8e
     </BrowserRouter>
   )
 }
