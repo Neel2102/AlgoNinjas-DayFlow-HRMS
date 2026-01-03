@@ -24,7 +24,10 @@ const unwrap = (res) => {
 
 const isoDateKey = (d) => {
   const dt = new Date(d);
-  return dt.toISOString().slice(0, 10);
+  const yyyy = dt.getFullYear();
+  const mm = String(dt.getMonth() + 1).padStart(2, "0");
+  const dd = String(dt.getDate()).padStart(2, "0");
+  return `${yyyy}-${mm}-${dd}`;
 };
 
 const addDays = (d, n) => {
