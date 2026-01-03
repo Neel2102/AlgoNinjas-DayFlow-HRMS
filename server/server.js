@@ -12,6 +12,7 @@ import attendanceRoutes from "./routes/attendanceRoutes.js";
 import leaveRoutes from "./routes/leaveRoutes.js";
 import payrollRoutes from "./routes/payrollRoutes.js";
 import devRoutes from "./routes/devRoutes.js";
+import notificationRoutes from "./routes/notificationRoutes.js";
 import { errorHandler, notFound } from "./middlewares/errorMiddleware.js";
 
 app.use(express.json({ limit: "10mb" }));
@@ -29,6 +30,7 @@ app.use("/api/employees", employeeRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/payroll", payrollRoutes);
+app.use("/api/notifications", notificationRoutes);
 app.use("/api/dev", devRoutes);
 
 app.use(notFound);

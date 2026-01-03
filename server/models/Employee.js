@@ -10,6 +10,7 @@ const employeeSchema = new mongoose.Schema(
     },
     personal: {
       fullName: { type: String, trim: true, default: "" },
+      email: { type: String, trim: true, default: "" },
       phone: { type: String, trim: true, default: "" },
       alternatePhone: { type: String, trim: true, default: "" },
       dateOfBirth: { type: Date, default: null },

@@ -173,7 +173,7 @@ export const updateEmployeeById = async (req, res, next) => {
 
 export const createEmployeeUser = async (req, res, next) => {
   try {
-    const { employeeId, fullName, emailPrefix, domain } = req.body || {};
+    const { employeeId, fullName, emailPrefix, domain, personalEmail } = req.body || {};
     if (!employeeId) return sendError(res, "employeeId is required", 400);
 
     const resolvedDomain = String(domain || process.env.ORG_EMAIL_DOMAIN || "").trim();
@@ -208,7 +208,13 @@ export const createEmployeeUser = async (req, res, next) => {
 
     const employee = await Employee.create({
       user: user._id,
-      personal: fullName ? { fullName: String(fullName).trim() } : undefined,
+      personal:
+        fullName || personalEmail
+          ? {
+              ...(fullName ? { fullName: String(fullName).trim() } : {}),
+              ...(personalEmail ? { email: String(personalEmail).trim().toLowerCase() } : {}),
+            }
+          : undefined,
     });
 
     const populated = await Employee.findById(employee._id).populate(

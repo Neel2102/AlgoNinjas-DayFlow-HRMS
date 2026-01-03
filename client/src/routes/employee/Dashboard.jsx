@@ -6,7 +6,11 @@ import Button from "../../components/common/Button";
 import { useAuth } from "../../context/AuthContext";
 import * as employeeService from "../../services/employeeService";
 import * as attendanceService from "../../services/attendanceService";
+<<<<<<< Updated upstream
 import "../../CSS/Employee.css";
+=======
+import * as notificationService from "../../services/notificationService";
+>>>>>>> Stashed changes
 
 const getErrorMessage = (err) => {
   return (
@@ -51,10 +55,19 @@ const Dashboard = () => {
   const [attendanceToday, setAttendanceToday] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
+  const [broadcastSubject, setBroadcastSubject] = useState("");
+  const [broadcastMessage, setBroadcastMessage] = useState("");
+  const [broadcastSendEmail, setBroadcastSendEmail] = useState(true);
+  const [broadcastSendInApp, setBroadcastSendInApp] = useState(true);
+  const [broadcastResult, setBroadcastResult] = useState(null);
+
+  const [notifications, setNotifications] = useState([]);
+
   const [createEmployeeId, setCreateEmployeeId] = useState("");
   const [createFullName, setCreateFullName] = useState("");
   const [createEmailPrefix, setCreateEmailPrefix] = useState("");
   const [createDomain, setCreateDomain] = useState("");
+  const [createPersonalEmail, setCreatePersonalEmail] = useState("");
   const [createdCredentials, setCreatedCredentials] = useState([]);
 
   useEffect(() => {
@@ -77,6 +90,10 @@ const Dashboard = () => {
           const todayKey = new Date().toISOString().slice(0, 10);
           const today = Array.isArray(rows) ? rows.find((r) => r?.date === todayKey) : null;
           setAttendanceToday(today || null);
+
+          const inbox = await notificationService.getMyNotifications();
+          if (!mounted) return;
+          setNotifications(Array.isArray(inbox) ? inbox : []);
         }
       } catch (err) {
         if (!mounted) return;
@@ -91,6 +108,65 @@ const Dashboard = () => {
       mounted = false;
     };
   }, [isAdmin]);
+
+  const doBroadcast = async () => {
+    setActionLoading(true);
+    setError("");
+    setBroadcastResult(null);
+    try {
+      const result = await notificationService.broadcastAlert({
+        subject: broadcastSubject,
+        message: broadcastMessage,
+        sendEmail: broadcastSendEmail,
+        sendInApp: broadcastSendInApp,
+      });
+      setBroadcastResult(result || null);
+      setBroadcastSubject("");
+      setBroadcastMessage("");
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const doPersonal = async ({ userId, mode }) => {
+    const subject = window.prompt("Enter subject");
+    if (subject === null) return;
+    const message = window.prompt("Enter message");
+    if (message === null) return;
+
+    setActionLoading(true);
+    setError("");
+    try {
+      const payload = {
+        subject,
+        message,
+        sendEmail: mode === "email" || mode === "both",
+        sendInApp: mode === "notify" || mode === "both",
+      };
+      await notificationService.alertUser(userId, payload);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const markRead = async (id) => {
+    setActionLoading(true);
+    setError("");
+    try {
+      const updated = await notificationService.markRead(id);
+      setNotifications((prev) =>
+        (prev || []).map((n) => (n?._id === updated?._id ? updated : n))
+      );
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setActionLoading(false);
+    }
+  };
 
   const filteredEmployees = useMemo(() => {
     const q = String(shellSearch || "").trim().toLowerCase();
@@ -170,6 +246,7 @@ const Dashboard = () => {
         fullName: createFullName,
         emailPrefix: createEmailPrefix,
         domain: createDomain,
+        personalEmail: createPersonalEmail,
       };
       const res = await employeeService.createEmployeeUser(payload);
       const cred = res?.credentials;
@@ -192,6 +269,7 @@ const Dashboard = () => {
       setCreateEmployeeId("");
       setCreateFullName("");
       setCreateEmailPrefix("");
+<<<<<<< Updated upstream
       setCreateDomain("");
     } catch (err) {
       setError(getErrorMessage(err));
@@ -219,6 +297,9 @@ const Dashboard = () => {
     try {
       const record = await attendanceService.breakEnd();
       setAttendanceToday(record);
+=======
+      setCreatePersonalEmail("");
+>>>>>>> Stashed changes
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -260,6 +341,92 @@ const Dashboard = () => {
           <Card className="pad" style={{ marginBottom: 12 }}>
             <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
               <div>
+                <div className="ui-title">Send Alert to All Employees</div>
+                <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+                  Send a common email and/or in-app alert to everyone.
+                </div>
+              </div>
+              <div className="ui-row gap-10" style={{ flexWrap: "wrap" }}>
+                <label className="ui-small ui-row gap-8" style={{ alignItems: "center" }}>
+                  <input
+                    type="checkbox"
+                    checked={broadcastSendEmail}
+                    onChange={(e) => setBroadcastSendEmail(e.target.checked)}
+                  />
+                  Email
+                </label>
+                <label className="ui-small ui-row gap-8" style={{ alignItems: "center" }}>
+                  <input
+                    type="checkbox"
+                    checked={broadcastSendInApp}
+                    onChange={(e) => setBroadcastSendInApp(e.target.checked)}
+                  />
+                  In-app
+                </label>
+              </div>
+            </div>
+
+            <div className="ui-grid" style={{ gridTemplateColumns: "1fr", gap: 10, marginTop: 12 }}>
+              <input
+                className="dash-search"
+                value={broadcastSubject}
+                onChange={(e) => setBroadcastSubject(e.target.value)}
+                placeholder="Subject"
+              />
+              <textarea
+                className="dash-search"
+                value={broadcastMessage}
+                onChange={(e) => setBroadcastMessage(e.target.value)}
+                placeholder="Message"
+                rows={4}
+                style={{ resize: "vertical" }}
+              />
+            </div>
+
+            <div className="ui-row" style={{ marginTop: 10, justifyContent: "flex-end" }}>
+              <Button
+                onClick={doBroadcast}
+                disabled={
+                  actionLoading ||
+                  !String(broadcastSubject).trim() ||
+                  !String(broadcastMessage).trim() ||
+                  (!broadcastSendEmail && !broadcastSendInApp)
+                }
+              >
+                {actionLoading ? "Sending..." : "Send Alert"}
+              </Button>
+            </div>
+
+            {broadcastResult ? (
+              <div className="ui-small ui-muted" style={{ marginTop: 10 }}>
+                Sent: {broadcastResult?.sent ?? 0}
+                {broadcastSendEmail ? (
+                  <> | Skipped (missing personal email): {broadcastResult?.skipped ?? 0}</>
+                ) : null}
+                {broadcastSendEmail ? (
+                  <> | Failed: {broadcastResult?.failed ?? 0}</>
+                ) : null}
+                {broadcastSendInApp ? (
+                  <> | In-app created: {broadcastResult?.notificationsCreated ?? 0}</>
+                ) : null}
+
+                {broadcastResult?.failures?.length ? (
+                  <div style={{ marginTop: 6 }}>
+                    <div style={{ fontWeight: 900, marginBottom: 4 }}>Failures (sample)</div>
+                    {(broadcastResult.failures || []).slice(0, 3).map((f, idx) => (
+                      <div key={`${f.email}-${idx}`} style={{ marginBottom: 2 }}>
+                        {f.email}: {String(f.error || "").slice(0, 140)}
+                      </div>
+                    ))}
+                  </div>
+                ) : null}
+              </div>
+            ) : null}
+          </Card>
+
+          <Card className="pad" style={{ marginBottom: 12 }}>
+            <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
+              <div>
                 <div className="ui-title">Create Employee</div>
                 <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
                   This generates an organization email and a one-time password for the employee.
@@ -288,6 +455,12 @@ const Dashboard = () => {
                 value={createFullName}
                 onChange={(e) => setCreateFullName(e.target.value)}
                 placeholder="Full Name (optional)"
+              />
+              <input
+                className="dash-search"
+                value={createPersonalEmail}
+                onChange={(e) => setCreatePersonalEmail(e.target.value)}
+                placeholder="Personal email (for alerts)"
               />
               <input
                 className="dash-search"
@@ -378,6 +551,7 @@ const Dashboard = () => {
               const empId = e?.user?.employeeId || "";
               const pic = e?.personal?.profilePictureUrl || "";
               const dot = dotClassFromStatus(null);
+              const userId = e?.user?._id || e?.user?.id || "";
               return (
                 <div
                   key={e?._id || email}
@@ -403,15 +577,105 @@ const Dashboard = () => {
                         <div className="employee-id-employeedashboard">{empId || email}</div>
                       </div>
                     </div>
+<<<<<<< Updated upstream
                     <div className={`employee-status-employeedashboard ${dot}-employeedashboard`} />
                   </div>
                 </div>
+=======
+                    <div
+                      className={`ui-dot ${dot}`}
+                      title={String(dot).toUpperCase()}
+                    />
+                  </div>
+
+                  <div className="ui-row gap-8" style={{ marginTop: 10, flexWrap: "wrap" }}>
+                    <Button
+                      variant="ghost"
+                      onClick={(ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        if (!userId) return;
+                        doPersonal({ userId, mode: "email" });
+                      }}
+                      disabled={actionLoading || !userId}
+                    >
+                      Email
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={(ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        if (!userId) return;
+                        doPersonal({ userId, mode: "notify" });
+                      }}
+                      disabled={actionLoading || !userId}
+                    >
+                      Notify
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      onClick={(ev) => {
+                        ev.preventDefault();
+                        ev.stopPropagation();
+                        if (!userId) return;
+                        doPersonal({ userId, mode: "both" });
+                      }}
+                      disabled={actionLoading || !userId}
+                    >
+                      Both
+                    </Button>
+                  </div>
+                </Card>
+>>>>>>> Stashed changes
               );
             })}
           </div>
         </>
       ) : (
         <>
+          <Card className="pad" style={{ marginBottom: 12 }}>
+            <div className="ui-title">My Alerts</div>
+            <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+              Latest notifications from Admin/HR.
+            </div>
+
+            {!notifications.length ? (
+              <div className="ui-small ui-muted" style={{ marginTop: 10 }}>No alerts yet.</div>
+            ) : (
+              <div style={{ marginTop: 10, display: "grid", gap: 10 }}>
+                {notifications.slice(0, 8).map((n) => {
+                  const unread = !n?.readAt;
+                  return (
+                    <div
+                      key={n?._id}
+                      style={{
+                        border: "1px solid var(--border-medium)",
+                        borderRadius: 12,
+                        padding: 12,
+                        background: "var(--bg-secondary)",
+                      }}
+                    >
+                      <div className="ui-row between gap-12">
+                        <div style={{ fontWeight: 900 }}>{n?.title || "Alert"}</div>
+                        {unread ? (
+                          <Button variant="ghost" onClick={() => markRead(n._id)} disabled={actionLoading}>
+                            Mark read
+                          </Button>
+                        ) : (
+                          <div className="ui-small ui-muted">Read</div>
+                        )}
+                      </div>
+                      <div className="ui-small" style={{ marginTop: 6, whiteSpace: "pre-wrap" }}>
+                        {n?.message || ""}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </Card>
+
           <div className="ui-grid cards" style={{ marginBottom: 12 }}>
             <Card className="pad" role="button" tabIndex={0} onClick={() => navigate("/profile")}
               onKeyDown={(e) => { if (e.key === "Enter") navigate("/profile"); }} style={{ cursor: "pointer" }}>

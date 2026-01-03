@@ -29,6 +29,15 @@ const SignUp = () => {
 
   const passwordMismatch = password && confirmPassword && password !== confirmPassword;
 
+  const passwordPolicyError = useMemo(() => {
+    const p = String(password || "");
+    if (!p) return "";
+    if (p.length < 8) return "Password must be at least 8 characters.";
+    if (!/[A-Z]/.test(p)) return "Password must include at least one capital letter.";
+    if (!/[^A-Za-z0-9]/.test(p)) return "Password must include at least one special character.";
+    return "";
+  }, [password]);
+
   const disabled = useMemo(() => {
     return (
       loading ||
@@ -36,9 +45,10 @@ const SignUp = () => {
       !email.trim() ||
       !password ||
       !confirmPassword ||
-      passwordMismatch
+      passwordMismatch ||
+      Boolean(passwordPolicyError)
     );
-  }, [loading, employeeId, email, password, confirmPassword, passwordMismatch]);
+  }, [loading, employeeId, email, password, confirmPassword, passwordMismatch, passwordPolicyError]);
 
   useEffect(() => {
     if (isAuthenticated) navigate("/dashboard", { replace: true });
@@ -47,6 +57,10 @@ const SignUp = () => {
   const onSubmit = async (e) => {
     e.preventDefault();
     setError("");
+    if (passwordPolicyError) {
+      setError(passwordPolicyError);
+      return;
+    }
     try {
       const res = await signUp({ employeeId, email, password, role, adminSecret: role === "employee" ? "" : adminSecret });
       if (res?.verificationRequired) {
@@ -118,10 +132,10 @@ const SignUp = () => {
               <div className="auth-password">
                 <input
                   className="auth-input"
-                  type={showPassword ? "text" : "password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
+                  placeholder="********"
+                  type={showPassword ? "text" : "password"}
                   autoComplete="new-password"
                 />
                 <button
@@ -132,6 +146,11 @@ const SignUp = () => {
                   {showPassword ? "Hide" : "Show"}
                 </button>
               </div>
+              {passwordPolicyError ? (
+                <div className="ui-small" style={{ marginTop: 6 }}>
+                  {passwordPolicyError}
+                </div>
+              ) : null}
             </div>
 
             <div className="auth-row">
