@@ -5,7 +5,11 @@ const connectDB = async ()=>{
         console.log("DataBase Connected Successfully - mongodb Atlas");
 
     })
-    await mongoose.connect(`${process.env.MONGODB_URI}`);
+    const uri = process.env.MONGODB_URI ? String(process.env.MONGODB_URI).trim() : "";
+    if (!uri) {
+        throw new Error("MONGODB_URI is missing in environment variables");
+    }
+    await mongoose.connect(uri);
 }
 
 export default connectDB;
