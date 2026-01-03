@@ -300,9 +300,7 @@ export const updateEmployeeById = async (req, res, next) => {
 
 export const createEmployeeUser = async (req, res, next) => {
   try {
-    const { employeeId, fullName, emailPrefix, domain, personalEmail } = req.body || {};
-    if (!employeeId) return sendError(res, "employeeId is required", 400);
-    const { fullName, emailPrefix, domain } = req.body || {};
+    const { fullName, emailPrefix, domain, personalEmail } = req.body || {};
     const cleanFullName = String(fullName || "").trim();
     if (!cleanFullName) return sendError(res, "fullName is required", 400);
 
