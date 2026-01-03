@@ -22,14 +22,13 @@ export const listPayroll = async ({ userId, month } = {}) => {
   return unwrap(res);
 };
 
-export const upsertPayroll = async ({ userId, month, grossPay, deductions, netPay, currency, notes } = {}) => {
-  const res = await api.put(`/payroll/${userId}/${month}`, {
-    grossPay,
-    deductions,
-    netPay,
-    currency,
-    notes,
-  });
+export const generatePayrollForUser = async ({ userId, month, notes } = {}) => {
+  const res = await api.post(`/payroll/${userId}/${month}/generate`, { notes });
+  return unwrap(res);
+};
+
+export const generatePayrollForAll = async ({ month, notes } = {}) => {
+  const res = await api.post(`/payroll/generate/${month}`, { notes });
   return unwrap(res);
 };
 

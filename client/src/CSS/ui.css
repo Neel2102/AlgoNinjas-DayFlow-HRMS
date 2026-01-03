@@ -13,7 +13,13 @@ body{margin:0;background:var(--bg-secondary);color:var(--text-primary);font-fami
 
 a{color:inherit}
 
-.ui-page{min-height:100vh;background:var(--bg-secondary)}
+.ui-page{min-height:100vh;background:
+  radial-gradient(900px 540px at 14% 8%, rgba(80, 70, 255, 0.12) 0%, rgba(80, 70, 255, 0) 60%),
+  radial-gradient(820px 520px at 92% 18%, rgba(18, 163, 255, 0.10) 0%, rgba(18, 163, 255, 0) 55%),
+  radial-gradient(780px 520px at 78% 92%, rgba(28, 205, 135, 0.08) 0%, rgba(28, 205, 135, 0) 58%),
+  linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.0) 70%),
+  var(--bg-secondary)
+}
 .ui-shell{max-width:1200px;margin:0 auto;padding:20px}
 
 .ui-card{background:var(--bg-primary);border:var(--ui-border);border-radius:var(--ui-radius-md);box-shadow:var(--ui-shadow)}
@@ -64,7 +70,7 @@ a{color:inherit}
 .ui-modal-head{padding:16px 16px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px}
 .ui-modal-body{padding:0 16px 16px}
 
-.ui-topbar{position:sticky;top:0;z-index:50;background:rgba(245,245,245,.88);backdrop-filter:blur(10px);border-bottom:1px solid var(--border-light)}
+.ui-topbar{position:sticky;top:0;z-index:50;background:rgba(245,245,245,.78);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-light)}
 .ui-topbar-inner{max-width:1200px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ui-brand{display:flex;align-items:center;gap:10px;font-weight:1000;letter-spacing:.3px}
 .ui-brand-mark{width:34px;height:34px;border-radius:12px;background:var(--secondary);display:grid;place-items:center;color:var(--text-light);font-weight:1000}

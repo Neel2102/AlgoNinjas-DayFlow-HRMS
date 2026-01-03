@@ -25,3 +25,8 @@ export const getEmployeeById = async (id) => {
   const res = await api.get(`/employees/${id}`);
   return unwrap(res);
 };
+
+export const updateEmployeeById = async (id, payload) => {
+  const res = await api.put(`/employees/${id}`, payload);
+  return unwrap(res);
+};

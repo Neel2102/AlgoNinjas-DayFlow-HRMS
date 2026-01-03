@@ -30,15 +30,10 @@ const PayrollManagement = () => {
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const [grossPay, setGrossPay] = useState(0);
-  const [deductions, setDeductions] = useState(0);
-  const [netPay, setNetPay] = useState(0);
-  const [currency, setCurrency] = useState("INR");
-  const [notes, setNotes] = useState("");
+  const [genLoading, setGenLoading] = useState(false);
 
   const employeeOptions = useMemo(() => {
     return (employees || [])
@@ -80,48 +75,52 @@ const PayrollManagement = () => {
     }
   };
 
-  useEffect(() => {
-    load();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedUserId, month]);
-
-  useEffect(() => {
-    const g = Number(grossPay) || 0;
-    const d = Number(deductions) || 0;
-    setNetPay(Math.max(0, g - d));
-  }, [grossPay, deductions]);
-
-  const save = async (e) => {
-    e.preventDefault();
-    setSaving(true);
+  const generateForSelected = async () => {
+    setGenLoading(true);
     setError("");
     setSuccess("");
     try {
       if (!selectedUserId) {
-        setError("Select an employee to update payroll");
+        setError("Select an employee to generate payroll");
         return;
       }
       if (!month) {
         setError("Select a month");
         return;
       }
-      await payrollService.upsertPayroll({
-        userId: selectedUserId,
-        month,
-        grossPay: Number(grossPay) || 0,
-        deductions: Number(deductions) || 0,
-        netPay: Number(netPay) || 0,
-        currency,
-        notes,
-      });
-      setSuccess("Payroll updated");
+      await payrollService.generatePayrollForUser({ userId: selectedUserId, month });
+      setSuccess("Payroll generated from salary structure");
       await load();
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
-      setSaving(false);
+      setGenLoading(false);
     }
   };
+
+  const generateForAll = async () => {
+    setGenLoading(true);
+    setError("");
+    setSuccess("");
+    try {
+      if (!month) {
+        setError("Select a month");
+        return;
+      }
+      const res = await payrollService.generatePayrollForAll({ month });
+      setSuccess(`Payroll generated for ${res?.generated ?? "all"} employees`);
+      await load();
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setGenLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedUserId, month]);
 
   return (
     <div className="dash-page">
@@ -153,51 +152,17 @@ const PayrollManagement = () => {
 
           <div className="att-table-wrap" style={{ marginBottom: 14 }}>
             <div style={{ padding: 12 }}>
-              <div style={{ fontWeight: 800, marginBottom: 10 }}>Update Payroll</div>
-              <form onSubmit={save} style={{ display: "grid", gap: 10, maxWidth: 720 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                  <input
-                    className="dash-search"
-                    type="number"
-                    value={grossPay}
-                    onChange={(e) => setGrossPay(e.target.value)}
-                    placeholder="Gross pay"
-                  />
-                  <input
-                    className="dash-search"
-                    type="number"
-                    value={deductions}
-                    onChange={(e) => setDeductions(e.target.value)}
-                    placeholder="Deductions"
-                  />
-                  <input
-                    className="dash-search"
-                    type="number"
-                    value={netPay}
-                    readOnly
-                    placeholder="Net pay"
-                  />
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 10, flexWrap: "wrap", marginBottom: 10 }}>
+                <div style={{ fontWeight: 800 }}>Payroll Actions</div>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <button className="dash-action-btn" type="button" disabled={genLoading} onClick={generateForSelected}>
+                    {genLoading ? "Working..." : "Generate for selected"}
+                  </button>
+                  <button className="dash-action-btn" type="button" disabled={genLoading} onClick={generateForAll}>
+                    {genLoading ? "Working..." : "Generate for all"}
+                  </button>
                 </div>
-
-                <div style={{ display: "grid", gridTemplateColumns: "120px 1fr", gap: 10 }}>
-                  <input
-                    className="dash-search"
-                    value={currency}
-                    onChange={(e) => setCurrency(e.target.value)}
-                    placeholder="Currency"
-                  />
-                  <input
-                    className="dash-search"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    placeholder="Notes (optional)"
-                  />
-                </div>
-
-                <button className="dash-action-btn" type="submit" disabled={saving}>
-                  {saving ? "Saving..." : "Save"}
-                </button>
-              </form>
+              </div>
             </div>
           </div>
 

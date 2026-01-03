@@ -75,7 +75,7 @@ export const updateEmployeeById = async (req, res, next) => {
     const employee = await Employee.findById(id);
     if (!employee) return sendError(res, "Employee not found", 404);
 
-    const { personal, job, salaryStructure, documents, user } = req.body;
+    const { personal, job, salary, bank, skills, certifications, salaryStructure, documents, user } = req.body;
 
     if (personal && typeof personal === "object") {
       const current = employee.personal && employee.personal.toObject ? employee.personal.toObject() : {};
@@ -85,6 +85,20 @@ export const updateEmployeeById = async (req, res, next) => {
       const current = employee.job && employee.job.toObject ? employee.job.toObject() : {};
       employee.job = { ...current, ...job };
     }
+    if (salary && typeof salary === "object") {
+      const current = employee.salary && employee.salary.toObject ? employee.salary.toObject() : {};
+      employee.salary = { ...current, ...salary };
+    }
+    if (bank && typeof bank === "object") {
+      const current = employee.bank && employee.bank.toObject ? employee.bank.toObject() : {};
+      employee.bank = { ...current, ...bank };
+    }
+    if (Array.isArray(skills)) {
+      employee.skills = skills;
+    }
+    if (Array.isArray(certifications)) {
+      employee.certifications = certifications;
+    }
     if (salaryStructure && typeof salaryStructure === "object") {
       const current =
         employee.salaryStructure && employee.salaryStructure.toObject
@@ -93,7 +107,13 @@ export const updateEmployeeById = async (req, res, next) => {
       employee.salaryStructure = { ...current, ...salaryStructure };
     }
     if (Array.isArray(documents)) {
-      employee.documents = documents;
+      employee.documents = documents.map((d) => {
+        if (!d || typeof d !== "object") return d;
+        const next = { ...d };
+        if (!next.fileUrl && next.url) next.fileUrl = next.url;
+        if (!next.url && next.fileUrl) next.url = next.fileUrl;
+        return next;
+      });
     }
 
     await employee.save();
