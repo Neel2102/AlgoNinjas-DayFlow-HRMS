@@ -61,6 +61,11 @@ const Dashboard = () => {
   const [createPersonalEmail, setCreatePersonalEmail] = useState("");
   const [createdCredentials, setCreatedCredentials] = useState([]);
 
+  const [alertTarget, setAlertTarget] = useState("all");
+  const [alertSubject, setAlertSubject] = useState("");
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertSending, setAlertSending] = useState(false);
+
   useEffect(() => {
     let mounted = true;
     const run = async () => {
@@ -270,6 +275,46 @@ const Dashboard = () => {
     }
   };
 
+  const sendAlert = async () => {
+    const subject = String(alertSubject || "").trim();
+    const message = String(alertMessage || "").trim();
+    if (!subject || !message) {
+      toast.error("Subject and message are required");
+      return;
+    }
+
+    setAlertSending(true);
+    setError("");
+    try {
+      if (alertTarget === "all") {
+        await notificationService.broadcastAlert({
+          subject,
+          message,
+          sendEmail: false,
+          sendInApp: true,
+        });
+        toast.success("Alert sent to all employees");
+      } else {
+        await notificationService.alertUser(alertTarget, {
+          subject,
+          message,
+          sendEmail: false,
+          sendInApp: true,
+        });
+        toast.success("Alert sent");
+      }
+      setAlertSubject("");
+      setAlertMessage("");
+      setAlertTarget("all");
+    } catch (err) {
+      const msg = getErrorMessage(err);
+      setError(msg);
+      toast.error(msg);
+    } finally {
+      setAlertSending(false);
+    }
+  };
+
   return (
     <div className="container-employeedashboard">
       {/* Header */}
@@ -301,6 +346,70 @@ const Dashboard = () => {
         </div>
       ) : isAdmin ? (
         <>
+          <Card className="pad" style={{ marginBottom: 12 }}>
+            <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
+              <div>
+                <div className="ui-title">Send Alert</div>
+                <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+                  Send an in-app alert to all employees or a specific employee.
+                </div>
+              </div>
+            </div>
+
+            <div
+              className="ui-grid"
+              style={{
+                gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))",
+                gap: 10,
+                marginTop: 12,
+              }}
+            >
+              <select
+                className="dash-search"
+                value={alertTarget}
+                onChange={(e) => setAlertTarget(e.target.value)}
+              >
+                <option value="all">All employees</option>
+                {(employees || []).map((e) => {
+                  const uid = e?.user?._id || e?.user?.id || "";
+                  const name = String(e?.personal?.fullName || "").trim();
+                  const empId = String(e?.user?.employeeId || "").trim();
+                  if (!uid) return null;
+                  const label = name ? `${name}${empId ? ` (${empId})` : ""}` : (empId || "Employee");
+                  return (
+                    <option key={uid} value={uid}>
+                      {label}
+                    </option>
+                  );
+                })}
+              </select>
+
+              <input
+                className="dash-search"
+                value={alertSubject}
+                onChange={(e) => setAlertSubject(e.target.value)}
+                placeholder="Subject"
+              />
+            </div>
+
+            <div style={{ marginTop: 10 }}>
+              <textarea
+                className="dash-search"
+                value={alertMessage}
+                onChange={(e) => setAlertMessage(e.target.value)}
+                placeholder="Message"
+                rows={4}
+                style={{ width: "100%", resize: "vertical" }}
+              />
+            </div>
+
+            <div className="ui-row" style={{ marginTop: 10, justifyContent: "flex-end" }}>
+              <Button onClick={sendAlert} disabled={alertSending || actionLoading}>
+                {alertSending ? "Sending..." : "Send Alert"}
+              </Button>
+            </div>
+          </Card>
+
           <Card className="pad" style={{ marginBottom: 12 }}>
             <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
               <div>
@@ -417,7 +526,8 @@ const Dashboard = () => {
           {/* Employee Grid */}
           <div className="employee-grid-employeedashboard">
             {filteredEmployees.map((e) => {
-              const fullName = e?.personal?.fullName || "Employee";
+              const fullName = String(e?.personal?.fullName || "").trim();
+              if (!fullName) return null;
               const email = e?.user?.email || "";
               const empId = e?.user?.employeeId || "";
               const pic = e?.personal?.profilePictureUrl || "";
@@ -438,11 +548,7 @@ const Dashboard = () => {
                   <div className="employee-content-employeedashboard">
                     <div className="employee-left-employeedashboard">
                       <div className="employee-avatar-employeedashboard">
-                        {pic ? (
-                          <img src={pic} alt="profile" />
-                        ) : (
-                          initials(fullName)
-                        )}
+                        {pic ? <img src={pic} alt="profile" /> : initials(fullName)}
                       </div>
                       <div className="employee-info-employeedashboard">
                         <div className="employee-name-employeedashboard">{fullName}</div>
