@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
 import * as attendanceService from "../../services/attendanceService";
+import * as employeeService from "../../services/employeeService";
 
 const getErrorMessage = (err) => {
   return (
@@ -40,6 +41,7 @@ const Reports = () => {
   const [summary, setSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [employeeCsvLoading, setEmployeeCsvLoading] = useState(false);
 
   const range = useMemo(() => {
     const start = startOfWeekMonday(weekStart);
@@ -100,6 +102,148 @@ const Reports = () => {
     a.click();
     a.remove();
     URL.revokeObjectURL(url);
+  };
+
+  const safe = (v) => (v === null || v === undefined ? "" : v);
+
+  const remaining = (balance, key) => {
+    const allocated = Number(balance?.[key]?.allocated) || 0;
+    const used = Number(balance?.[key]?.used) || 0;
+    return Math.max(0, allocated - used);
+  };
+
+  const downloadEmployeesCsv = async () => {
+    setEmployeeCsvLoading(true);
+    setError("");
+    try {
+      const list = await employeeService.listEmployees();
+      const employees = Array.isArray(list) ? list : [];
+
+      const header = [
+        "Employee ObjectId",
+        "Login ID",
+        "Full Name",
+        "Work Email",
+        "Role",
+        "Email Verified",
+        "Phone",
+        "Address Line1",
+        "Address Line2",
+        "City",
+        "State",
+        "Country",
+        "Postal Code",
+        "Job Title",
+        "Department",
+        "Manager",
+        "Work Location",
+        "Join Date",
+        "Employment Type",
+        "Work Phone",
+        "Salary Currency",
+        "Monthly Wage",
+        "Yearly Wage",
+        "Basic",
+        "HRA",
+        "DA",
+        "Special Allowance",
+        "Transport Allowance",
+        "Medical Allowance",
+        "PF",
+        "Professional Tax",
+        "Income Tax",
+        "Paid Leave Allocated",
+        "Paid Leave Used",
+        "Paid Leave Remaining",
+        "Sick Leave Allocated",
+        "Sick Leave Used",
+        "Sick Leave Remaining",
+        "Approved Leaves Count",
+        "Approved Leaves Days",
+        "Pending Leaves Count",
+        "Pending Leaves Days",
+        "Created At",
+        "Updated At",
+      ];
+
+      const rows = [header];
+      for (const e of employees) {
+        const user = e?.user || {};
+        const personal = e?.personal || {};
+        const addr = personal?.address || {};
+        const job = e?.job || {};
+        const salary = e?.salary || {};
+        const stats = e?.leaveStats || {};
+        const balance = e?.leaveBalance || null;
+
+        const paidAllocated = Number(balance?.paid?.allocated) || 0;
+        const paidUsed = Number(balance?.paid?.used) || 0;
+        const sickAllocated = Number(balance?.sick?.allocated) || 0;
+        const sickUsed = Number(balance?.sick?.used) || 0;
+
+        rows.push([
+          safe(e?._id),
+          safe(user?.employeeId),
+          safe(personal?.fullName),
+          safe(user?.email),
+          safe(user?.role),
+          safe(user?.isEmailVerified),
+          safe(personal?.phone),
+          safe(addr?.line1 ?? (typeof addr === "string" ? addr : "")),
+          safe(addr?.line2),
+          safe(addr?.city),
+          safe(addr?.state),
+          safe(addr?.country),
+          safe(addr?.postalCode),
+          safe(job?.title),
+          safe(job?.department),
+          safe(job?.managerName),
+          safe(job?.workLocation),
+          safe(job?.joinDate ? isoDateKey(job.joinDate) : ""),
+          safe(job?.employmentType),
+          safe(job?.workPhone),
+          safe(salary?.currency),
+          safe(salary?.monthlyWage),
+          safe(salary?.yearlyWage),
+          safe(salary?.basic),
+          safe(salary?.hra),
+          safe(salary?.da),
+          safe(salary?.specialAllowance),
+          safe(salary?.transportAllowance),
+          safe(salary?.medicalAllowance),
+          safe(salary?.pf),
+          safe(salary?.professionalTax),
+          safe(salary?.incomeTax),
+          safe(paidAllocated),
+          safe(paidUsed),
+          safe(remaining(balance, "paid")),
+          safe(sickAllocated),
+          safe(sickUsed),
+          safe(remaining(balance, "sick")),
+          safe(stats?.approvedCount),
+          safe(stats?.approvedDays),
+          safe(stats?.pendingCount),
+          safe(stats?.pendingDays),
+          safe(e?.createdAt || ""),
+          safe(e?.updatedAt || ""),
+        ]);
+      }
+
+      const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `employees_report_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setEmployeeCsvLoading(false);
+    }
   };
 
   const totals = useMemo(() => {
@@ -163,10 +307,11 @@ const Reports = () => {
           <div className="ui-small ui-muted" style={{ lineHeight: 1.7 }}>
             Attendance report (weekly)
             <br />
-            Salary slips (coming soon)
+            Employee master data (CSV)
           </div>
           <div className="ui-row gap-8">
             <Button onClick={downloadAttendanceCsv} disabled={loading || !summary}>Download Attendance CSV</Button>
+            <Button onClick={downloadEmployeesCsv} disabled={employeeCsvLoading}>{employeeCsvLoading ? "Preparing..." : "Download Employees CSV"}</Button>
           </div>
         </div>
       </Card>

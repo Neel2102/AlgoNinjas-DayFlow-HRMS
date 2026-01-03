@@ -312,17 +312,6 @@ const LeaveApproval = () => {
             </div>
           </Modal>
 
-          <div className="ui-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginBottom: 12, gap: 12 }}>
-            <Card className="pad">
-              <div className="ui-title">Paid leave</div>
-              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>24 Days Available</div>
-            </Card>
-            <Card className="pad">
-              <div className="ui-title">Sick leave</div>
-              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>07 Days Available</div>
-            </Card>
-          </div>
-
           <Card className="pad" padded={false}>
           {loading ? (
             <div className="pad" style={{ padding: 16 }}>
@@ -357,16 +346,20 @@ const LeaveApproval = () => {
                         <td>{r?.type || ""}</td>
                         <td>{r?.status || ""}</td>
                         <td>
-                          {pending ? (
-                            <div className="ui-row gap-8" style={{ flexWrap: "wrap" }}>
-                              <Button variant="danger" onClick={() => openDecision({ id, action: "reject" })}>Reject</Button>
-                              <Button variant="success" onClick={() => openDecision({ id, action: "approve" })}>Approve</Button>
-                            </div>
-                          ) : null}
                           <div className="ui-row gap-8" style={{ flexWrap: "wrap" }}>
-                            <Button variant="ghost" onClick={() => openDetails(r)}>View</Button>
-                            <Button variant="danger" disabled={!pending} onClick={() => openDecision({ id, action: "reject" })}>Reject</Button>
-                            <Button variant="success" disabled={!pending} onClick={() => openDecision({ id, action: "approve" })}>Approve</Button>
+                            <Button variant="ghost" onClick={() => openDetails(r)} style={{ height: 34, padding: "0 12px", borderRadius: 10 }}>
+                              View
+                            </Button>
+                            {pending ? (
+                              <>
+                                <Button variant="danger" onClick={() => openDecision({ id, action: "reject" })} style={{ height: 34, padding: "0 12px", borderRadius: 10 }}>
+                                  Reject
+                                </Button>
+                                <Button variant="success" onClick={() => openDecision({ id, action: "approve" })} style={{ height: 34, padding: "0 12px", borderRadius: 10 }}>
+                                  Approve
+                                </Button>
+                              </>
+                            ) : null}
                           </div>
                         </td>
                       </tr>
