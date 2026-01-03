@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useOutletContext } from "react-router-dom";
 
-import "../../CSS/Dashboard.css";
+import Card from "../../components/common/Card";
+import Button from "../../components/common/Button";
 import { useAuth } from "../../context/AuthContext";
 import * as employeeService from "../../services/employeeService";
 import * as attendanceService from "../../services/attendanceService";
@@ -36,24 +37,18 @@ const initials = (text) => {
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { shellSearch } = useOutletContext() || {};
   const { user, signOut } = useAuth();
 
   const role = user?.role || "employee";
   const isAdmin = role === "admin" || role === "hr";
 
-  const [activeTab, setActiveTab] = useState(isAdmin ? "Employees" : "Attendance");
-  const [search, setSearch] = useState("");
-  const [menuOpen, setMenuOpen] = useState(false);
-
   const [me, setMe] = useState(null);
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
   const [attendanceToday, setAttendanceToday] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
-
-  const [selectedEmployee, setSelectedEmployee] = useState(null);
 
   useEffect(() => {
     let mounted = true;
@@ -90,19 +85,8 @@ const Dashboard = () => {
     };
   }, [isAdmin]);
 
-  useEffect(() => {
-    const onDoc = (e) => {
-      if (!menuOpen) return;
-      const el = e.target;
-      if (el && el.closest && el.closest("[data-avatar-menu]")) return;
-      setMenuOpen(false);
-    };
-    document.addEventListener("click", onDoc);
-    return () => document.removeEventListener("click", onDoc);
-  }, [menuOpen]);
-
   const filteredEmployees = useMemo(() => {
-    const q = search.trim().toLowerCase();
+    const q = String(shellSearch || "").trim().toLowerCase();
     if (!q) return employees;
     return (employees || []).filter((e) => {
       const fullName = e?.personal?.fullName || "";
@@ -114,10 +98,7 @@ const Dashboard = () => {
         empId.toLowerCase().includes(q)
       );
     });
-  }, [employees, search]);
-
-  const avatarUrl = me?.personal?.profilePictureUrl || "";
-  const avatarFallback = initials(me?.personal?.fullName || me?.user?.email || user?.email);
+  }, [employees, shellSearch]);
 
   const doLogout = async () => {
     await signOut();
@@ -150,173 +131,172 @@ const Dashboard = () => {
     }
   };
 
-  const tabs = isAdmin
-    ? ["Company", "Employees", "Attendance", "Time Off", "Payroll"]
-    : ["Company", "Attendance", "Time Off", "Payroll"];
-
-  useEffect(() => {
-    if (!isAdmin) return;
-    if (activeTab === "Attendance") {
-      navigate("/admin/attendance");
-    }
-  }, [activeTab, isAdmin, navigate]);
-
-  useEffect(() => {
-    if (!isAdmin) return;
-    if (activeTab === "Time Off") {
-      navigate("/admin/leaves");
-    }
-  }, [activeTab, isAdmin, navigate]);
-
-  useEffect(() => {
-    if (!isAdmin) return;
-    if (activeTab === "Payroll") {
-      navigate("/admin/payroll");
-    }
-  }, [activeTab, isAdmin, navigate]);
-
-  useEffect(() => {
-    if (isAdmin) return;
-    if (activeTab === "Attendance") {
-      navigate("/attendance");
-    }
-  }, [activeTab, isAdmin, navigate]);
-
-  useEffect(() => {
-    if (isAdmin) return;
-    if (activeTab === "Time Off") {
-      navigate("/leaves");
-    }
-  }, [activeTab, isAdmin, navigate]);
-
-  useEffect(() => {
-    if (isAdmin) return;
-    if (activeTab === "Payroll") {
-      navigate("/payroll");
-    }
-  }, [activeTab, isAdmin, navigate]);
-
   return (
-    <div className="dash-page">
-      <div className="dash-shell">
-        <div className="dash-topbar">
-          <div className="dash-tabs">
-            {tabs.map((t) => (
-              <button
-                key={t}
-                className={`dash-tab ${activeTab === t ? "active" : ""}`}
-                onClick={() => setActiveTab(t)}
-              >
-                {t}
-              </button>
-            ))}
-          </div>
-
-          <div className="dash-right" data-avatar-menu>
-            <input
-              className="dash-search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search"
-            />
-
-            <div
-              className="dash-avatar"
-              role="button"
-              tabIndex={0}
-              onClick={() => setMenuOpen((s) => !s)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") setMenuOpen((s) => !s);
-              }}
-              aria-label="User menu"
-            >
-              {avatarUrl ? <img src={avatarUrl} alt="avatar" /> : <span>{avatarFallback}</span>}
-            </div>
+    <div>
+      <div className="ui-row between" style={{ marginBottom: 12 }}>
+        <div>
+          <h1 className="ui-h1">Dashboard</h1>
+          <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+            {isAdmin ? "Manage employees, attendance, time off and payroll" : "Your workday at a glance"}
           </div>
         </div>
+        <div className="ui-row gap-10">
+          {!isAdmin ? (
+            <Button variant="ghost" onClick={doLogout}>Log Out</Button>
+          ) : (
+            <Button variant="ghost" onClick={doLogout}>Log Out</Button>
+          )}
+        </div>
+      </div>
 
-        {menuOpen ? (
-          <div className="dash-menu" data-avatar-menu>
-            <button className="dash-menu-btn" onClick={() => navigate("/profile")}>My Profile</button>
-            <button className="dash-menu-btn" onClick={doLogout}>Log Out</button>
-          </div>
-        ) : null}
+      {error ? (
+        <Card className="pad" style={{ marginBottom: 12 }}>
+          <div className="ui-small">{error}</div>
+        </Card>
+      ) : null}
 
-        <div className="dash-body">
-          {error ? <div className="dash-note">{error}</div> : null}
+      {loading ? (
+        <Card className="pad">
+          <div className="ui-small ui-muted">Loading...</div>
+        </Card>
+      ) : isAdmin ? (
+        <>
+          <Card className="pad" style={{ marginBottom: 12 }}>
+            <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
+              <div>
+                <div className="ui-title">Employees</div>
+                <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+                  Click a card to view the employee profile
+                </div>
+              </div>
+              <div className="ui-row gap-8" style={{ flexWrap: "wrap" }}>
+                <Button variant="ghost" onClick={() => navigate("/admin/attendance")}>Attendance</Button>
+                <Button variant="ghost" onClick={() => navigate("/admin/leaves")}>Time Off</Button>
+                <Button variant="ghost" onClick={() => navigate("/admin/payroll")}>Payroll</Button>
+              </div>
+            </div>
+          </Card>
 
-          {loading ? (
-            <div className="dash-note">Loading...</div>
-          ) : isAdmin ? (
-            <>
-              {activeTab === "Employees" ? (
-                <div className="dash-grid">
-                  {filteredEmployees.map((e) => {
-                  const fullName = e?.personal?.fullName || "Employee";
-                  const email = e?.user?.email || "";
-                  const pic = e?.personal?.profilePictureUrl || "";
-                  const status = null;
-                  const dot = dotClassFromStatus(status);
-                  return (
-                    <div
-                      key={e?._id || email}
-                      className="dash-card"
-                      onClick={() => navigate(`/admin/employees/${e?._id}`)}
-                      role="button"
-                      tabIndex={0}
-                    >
-                      <div className="dash-card-img">
-                        {pic ? <img src={pic} alt="profile" /> : <span>{initials(fullName)}</span>}
+          <div className="ui-grid cards">
+            {filteredEmployees.map((e) => {
+              const fullName = e?.personal?.fullName || "Employee";
+              const email = e?.user?.email || "";
+              const empId = e?.user?.employeeId || "";
+              const pic = e?.personal?.profilePictureUrl || "";
+              const dot = dotClassFromStatus(null);
+              return (
+                <Card
+                  key={e?._id || email}
+                  className="pad"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => navigate(`/admin/employees/${e?._id}`)}
+                  onKeyDown={(ev) => {
+                    if (ev.key === "Enter") navigate(`/admin/employees/${e?._id}`);
+                  }}
+                  style={{ cursor: "pointer" }}
+                >
+                  <div className="ui-row between gap-12">
+                    <div className="ui-row gap-12">
+                      <div
+                        style={{
+                          width: 44,
+                          height: 44,
+                          borderRadius: 999,
+                          border: "1px solid var(--border-medium)",
+                          background: "var(--bg-primary)",
+                          display: "grid",
+                          placeItems: "center",
+                          fontWeight: 900,
+                        }}
+                      >
+                        {pic ? <img src={pic} alt="profile" style={{ width: "100%", height: "100%", borderRadius: 999, objectFit: "cover" }} /> : initials(fullName)}
                       </div>
                       <div>
-                        <div className="dash-card-title">{fullName}</div>
-                        <div className="dash-card-sub">{email}</div>
+                        <div style={{ fontWeight: 900 }}>{fullName}</div>
+                        <div className="ui-small ui-muted" style={{ marginTop: 2 }}>{empId || email}</div>
                       </div>
-                      <div className={`dash-dot ${dot}`} />
                     </div>
-                  );
-                  })}
-                </div>
-              ) : (
-                <div className="dash-note">
-                  Select a tab. Employees shows the employee list. Attendance opens admin attendance view.
-                </div>
-              )}
-            </>
-          ) : (
-            <>
-              <div className="dash-note">
-                Welcome, {me?.personal?.fullName || user?.email}. Use the buttons below to mark attendance.
-              </div>
+                    <div
+                      style={{
+                        width: 10,
+                        height: 10,
+                        borderRadius: 999,
+                        border: "1px solid var(--border-medium)",
+                        background: dot === "present" ? "var(--secondary)" : "var(--border-dark)",
+                      }}
+                    />
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="ui-grid cards" style={{ marginBottom: 12 }}>
+            <Card className="pad" role="button" tabIndex={0} onClick={() => navigate("/profile")}
+              onKeyDown={(e) => { if (e.key === "Enter") navigate("/profile"); }} style={{ cursor: "pointer" }}>
+              <div className="ui-title">Profile</div>
+              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>View and edit your details</div>
+            </Card>
+            <Card className="pad" role="button" tabIndex={0} onClick={() => navigate("/attendance")}
+              onKeyDown={(e) => { if (e.key === "Enter") navigate("/attendance"); }} style={{ cursor: "pointer" }}>
+              <div className="ui-title">Attendance</div>
+              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>Daily / weekly view</div>
+            </Card>
+            <Card className="pad" role="button" tabIndex={0} onClick={() => navigate("/leaves")}
+              onKeyDown={(e) => { if (e.key === "Enter") navigate("/leaves"); }} style={{ cursor: "pointer" }}>
+              <div className="ui-title">Time Off</div>
+              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>Apply and track requests</div>
+            </Card>
+          </div>
 
-              <div className="dash-actions">
-                <button
-                  className="dash-action-btn"
+          <Card className="pad" style={{ marginBottom: 12 }}>
+            <div className="ui-row between" style={{ marginBottom: 10, flexWrap: "wrap", gap: 10 }}>
+              <div>
+                <div className="ui-title">Today’s Attendance</div>
+                <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+                  {me?.personal?.fullName || user?.email}
+                </div>
+              </div>
+              <div className="ui-row gap-8" style={{ flexWrap: "wrap" }}>
+                <Button
+                  variant="primary"
                   onClick={doCheckIn}
                   disabled={actionLoading || Boolean(attendanceToday?.checkInAt)}
                 >
                   {attendanceToday?.checkInAt ? "Checked In" : "Check In"}
-                </button>
-                <button
-                  className="dash-action-btn secondary"
+                </Button>
+                <Button
+                  variant="ghost"
                   onClick={doCheckOut}
                   disabled={actionLoading || !attendanceToday?.checkInAt || Boolean(attendanceToday?.checkOutAt)}
                 >
                   {attendanceToday?.checkOutAt ? "Checked Out" : "Check Out"}
-                </button>
+                </Button>
               </div>
+            </div>
+            <div className="ui-divider" style={{ margin: "10px 0" }} />
+            <div className="ui-row gap-12" style={{ flexWrap: "wrap" }}>
+              <div className="ui-small"><span className="ui-muted">Date:</span> {attendanceToday?.date || new Date().toISOString().slice(0, 10)}</div>
+              <div className="ui-small"><span className="ui-muted">Status:</span> {attendanceToday?.status || "—"}</div>
+              <div className="ui-small"><span className="ui-muted">Check In:</span> {attendanceToday?.checkInAt ? new Date(attendanceToday.checkInAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
+              <div className="ui-small"><span className="ui-muted">Check Out:</span> {attendanceToday?.checkOutAt ? new Date(attendanceToday.checkOutAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
+            </div>
+          </Card>
 
-              <div className="dash-note">
-                Today: {attendanceToday?.date || new Date().toISOString().slice(0, 10)}
-                <br />
-                Status: {attendanceToday?.status || "—"}
+          <Card className="pad">
+            <div className="ui-row between" style={{ flexWrap: "wrap", gap: 10 }}>
+              <div>
+                <div className="ui-title">Payroll</div>
+                <div className="ui-small ui-muted" style={{ marginTop: 6 }}>View salary details (read-only)</div>
               </div>
-            </>
-          )}
-
-          {selectedEmployee ? null : null}
-        </div>
-      </div>
+              <Button variant="ghost" onClick={() => navigate("/payroll")}>Open Payroll</Button>
+            </div>
+          </Card>
+        </>
+      )}
     </div>
   );
 };

@@ -48,7 +48,11 @@ const SignUp = () => {
     e.preventDefault();
     setError("");
     try {
-      await signUp({ employeeId, email, password, role, adminSecret: role === "employee" ? "" : adminSecret });
+      const res = await signUp({ employeeId, email, password, role, adminSecret: role === "employee" ? "" : adminSecret });
+      if (res?.verificationRequired) {
+        navigate("/verify-otp", { replace: true, state: { email: res?.email || email } });
+        return;
+      }
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(getErrorMessage(err));

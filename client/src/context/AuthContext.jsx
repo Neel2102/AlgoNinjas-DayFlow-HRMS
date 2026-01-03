@@ -66,6 +66,30 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const verifyOtp = async ({ email, otp }) => {
+    setLoading(true);
+    try {
+      const res = await authService.verifyOtp({ email, otp });
+      const payload = extractAuthPayload(res);
+      setToken(payload?.token || "");
+      setUser(payload?.user || null);
+      return payload;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const resendOtp = async ({ email }) => {
+    setLoading(true);
+    try {
+      const res = await authService.resendOtp({ email });
+      const payload = extractAuthPayload(res);
+      return payload;
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const signOut = async () => {
     await authService.signOut();
     setToken("");
@@ -80,6 +104,8 @@ export const AuthProvider = ({ children }) => {
       isAuthenticated,
       signIn,
       signUp,
+      verifyOtp,
+      resendOtp,
       signOut,
     }),
     [token, user, loading, isAuthenticated]

@@ -18,6 +18,16 @@ export const signUp = async ({ employeeId, email, password, role, adminSecret })
   return unwrap(res);
 };
 
+export const verifyOtp = async ({ email, otp }) => {
+  const res = await api.post("/auth/verify-otp", { email, otp });
+  return unwrap(res);
+};
+
+export const resendOtp = async ({ email }) => {
+  const res = await api.post("/auth/resend-otp", { email });
+  return unwrap(res);
+};
+
 export const signOut = async () => {
   return true;
 };

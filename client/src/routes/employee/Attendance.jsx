@@ -1,8 +1,9 @@
-
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
-import "../../CSS/Dashboard.css";
+import Card from "../../components/common/Card";
+import Button from "../../components/common/Button";
+import Table from "../../components/common/Table";
 import * as attendanceService from "../../services/attendanceService";
 
 const getErrorMessage = (err) => {
@@ -124,69 +125,62 @@ const Attendance = () => {
   };
 
   return (
-    <div className="dash-page">
-      <div className="dash-shell">
-        <div className="dash-topbar">
-          <div className="dash-tabs">
-            <button className="dash-tab" onClick={() => navigate("/dashboard")}>Back</button>
-            <button className="dash-tab active">Attendance</button>
-            <button className="dash-tab" onClick={() => navigate("/profile")}>Profile</button>
-          </div>
-
-          <div className="att-controls">
-            <button className="att-nav" onClick={goPrev} aria-label="Previous">‹</button>
-            <div className="att-date">{titleDateLabel}</div>
-            <button className="att-nav" onClick={goNext} aria-label="Next">›</button>
-
-            <div className="att-seg">
-              <button
-                className={`att-seg-btn ${mode === "Day" ? "active" : ""}`}
-                onClick={() => setMode("Day")}
-              >
-                Day
-              </button>
-              <button
-                className={`att-seg-btn ${mode === "Week" ? "active" : ""}`}
-                onClick={() => setMode("Week")}
-              >
-                Week
-              </button>
-            </div>
-          </div>
+    <div>
+      <div className="ui-row between" style={{ marginBottom: 12, flexWrap: "wrap", gap: 12 }}>
+        <div>
+          <h1 className="ui-h1">Attendance</h1>
+          <div className="ui-small ui-muted" style={{ marginTop: 4 }}>Daily / weekly view</div>
         </div>
-
-        <div className="dash-body">
-          {error ? <div className="dash-note">{error}</div> : null}
-          {loading ? (
-            <div className="dash-note">Loading...</div>
-          ) : (
-            <div className="att-table-wrap">
-              <table className="att-table">
-                <thead>
-                  <tr>
-                    <th>Date</th>
-                    <th>Status</th>
-                    <th>Check In</th>
-                    <th>Check Out</th>
-                    <th>Work Hours</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tableRows.map((r) => (
-                    <tr key={r?._id || r?.date}>
-                      <td>{r?.date || ""}</td>
-                      <td>{r?.status || ""}</td>
-                      <td>{formatTime(r?.checkInAt)}</td>
-                      <td>{formatTime(r?.checkOutAt)}</td>
-                      <td>{hoursBetween(r?.checkInAt, r?.checkOutAt)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+        <div className="ui-row gap-10" style={{ flexWrap: "wrap" }}>
+          <Button variant="ghost" onClick={goPrev} aria-label="Previous">Prev</Button>
+          <Card className="pad" style={{ padding: "10px 12px" }}>
+            <div className="ui-small" style={{ fontWeight: 900 }}>{titleDateLabel}</div>
+          </Card>
+          <Button variant="ghost" onClick={goNext} aria-label="Next">Next</Button>
+          <div className="ui-row gap-8">
+            <Button variant={mode === "Day" ? "primary" : "ghost"} onClick={() => setMode("Day")}>Day</Button>
+            <Button variant={mode === "Week" ? "primary" : "ghost"} onClick={() => setMode("Week")}>Week</Button>
+          </div>
+          <Button variant="ghost" onClick={() => navigate("/dashboard")}>Back</Button>
         </div>
       </div>
+
+      {error ? (
+        <Card className="pad" style={{ marginBottom: 12 }}>
+          <div className="ui-small">{error}</div>
+        </Card>
+      ) : null}
+
+      <Card className="pad" padded={false}>
+        {loading ? (
+          <div className="pad" style={{ padding: 16 }}>
+            <div className="ui-small ui-muted">Loading...</div>
+          </div>
+        ) : (
+          <Table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Status</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Work Hours</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tableRows.map((r) => (
+                <tr key={r?._id || r?.date}>
+                  <td>{r?.date || ""}</td>
+                  <td>{r?.status || ""}</td>
+                  <td>{formatTime(r?.checkInAt)}</td>
+                  <td>{formatTime(r?.checkOutAt)}</td>
+                  <td>{hoursBetween(r?.checkInAt, r?.checkOutAt)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        )}
+      </Card>
     </div>
   );
 };

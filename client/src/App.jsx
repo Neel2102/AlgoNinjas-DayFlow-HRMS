@@ -2,10 +2,11 @@ import './App.css'
 import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom'
 import LandingPage from './pages/landingpage'
 import Navbar from './pages/navbar'
-import EmployeeDashboard from './pages/Employeedashboard.jsx'
 import SignIn from "./routes/auth/SignIn";
 import SignUp from "./routes/auth/SignUp";
+import VerifyOtp from "./routes/auth/VerifyOtp";
 import ProtectedRoute from "./components/common/ProtectedRoute";
+import AppShell from "./components/common/AppShell";
 import Dashboard from "./routes/employee/Dashboard";
 import Profile from "./routes/employee/Profile";
 import RequireRoleRoute from "./components/common/RequireRoleRoute";
@@ -25,7 +26,6 @@ function Layout() {
   const path = location.pathname || "/";
 
   const hideNavbar =
-    path === "/dashboard-employee" ||
     path === "/dashboard" ||
     path === "/profile" ||
     path === "/attendance" ||
@@ -40,23 +40,25 @@ function Layout() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
-        <Route path="/dashboard-employee" element={<EmployeeDashboard />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
 
         <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/attendance" element={<Attendance />} />
-          <Route path="/leaves" element={<LeaveManagement />} />
-          <Route path="/payroll" element={<Payroll />} />
+          <Route element={<AppShell />}>
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/attendance" element={<Attendance />} />
+            <Route path="/leaves" element={<LeaveManagement />} />
+            <Route path="/payroll" element={<Payroll />} />
 
-          <Route element={<RequireRoleRoute roles={["admin", "hr"]} />}>
-            <Route path="/admin/dashboard" element={<AdminDashboard />} />
-            <Route path="/admin/employees" element={<EmployeeList />} />
-            <Route path="/admin/employees/:id" element={<EmployeeDetail />} />
-            <Route path="/admin/attendance" element={<AttendanceAdmin />} />
-            <Route path="/admin/attendance-management" element={<AttendanceManagement />} />
-            <Route path="/admin/leaves" element={<LeaveApproval />} />
-            <Route path="/admin/payroll" element={<PayrollManagement />} />
+            <Route element={<RequireRoleRoute roles={["admin", "hr"]} />}>
+              <Route path="/admin/dashboard" element={<AdminDashboard />} />
+              <Route path="/admin/employees" element={<EmployeeList />} />
+              <Route path="/admin/employees/:id" element={<EmployeeDetail />} />
+              <Route path="/admin/attendance" element={<AttendanceAdmin />} />
+              <Route path="/admin/attendance-management" element={<AttendanceManagement />} />
+              <Route path="/admin/leaves" element={<LeaveApproval />} />
+              <Route path="/admin/payroll" element={<PayrollManagement />} />
+            </Route>
           </Route>
         </Route>
       </Routes>

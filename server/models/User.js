@@ -37,6 +37,14 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null,
     },
+    emailOtpHash: {
+      type: String,
+      default: null,
+    },
+    emailOtpExpiresAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
