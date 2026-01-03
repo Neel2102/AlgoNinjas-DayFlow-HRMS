@@ -101,7 +101,9 @@ const AppShell = () => {
                 if (e.key === "Enter") navigate(isAdmin ? "/admin/employees" : "/dashboard");
               }}
             >
-              <div className="ui-brand-mark">D</div>
+              <div className="ui-brand-mark">
+                <img className="ui-brand-logo" src="/white.png" alt="Dayflow" />
+              </div>
               <div>
                 <div style={{ fontWeight: 1000, lineHeight: 1 }}>Dayflow</div>
                 <div className="ui-small ui-muted" style={{ marginTop: 2 }}>HRMS</div>
