@@ -6,11 +6,8 @@ import Button from "../../components/common/Button";
 import { useAuth } from "../../context/AuthContext";
 import * as employeeService from "../../services/employeeService";
 import * as attendanceService from "../../services/attendanceService";
-<<<<<<< Updated upstream
-import "../../CSS/Employee.css";
-=======
 import * as notificationService from "../../services/notificationService";
->>>>>>> Stashed changes
+import "../../CSS/Employee.css";
 
 const getErrorMessage = (err) => {
   return (
@@ -57,8 +54,6 @@ const Dashboard = () => {
 
   const [broadcastSubject, setBroadcastSubject] = useState("");
   const [broadcastMessage, setBroadcastMessage] = useState("");
-  const [broadcastSendEmail, setBroadcastSendEmail] = useState(true);
-  const [broadcastSendInApp, setBroadcastSendInApp] = useState(true);
   const [broadcastResult, setBroadcastResult] = useState(null);
 
   const [notifications, setNotifications] = useState([]);
@@ -67,7 +62,6 @@ const Dashboard = () => {
   const [createFullName, setCreateFullName] = useState("");
   const [createEmailPrefix, setCreateEmailPrefix] = useState("");
   const [createDomain, setCreateDomain] = useState("");
-  const [createPersonalEmail, setCreatePersonalEmail] = useState("");
   const [createdCredentials, setCreatedCredentials] = useState([]);
 
   useEffect(() => {
@@ -117,35 +111,12 @@ const Dashboard = () => {
       const result = await notificationService.broadcastAlert({
         subject: broadcastSubject,
         message: broadcastMessage,
-        sendEmail: broadcastSendEmail,
-        sendInApp: broadcastSendInApp,
+        sendEmail: false,
+        sendInApp: true,
       });
       setBroadcastResult(result || null);
       setBroadcastSubject("");
       setBroadcastMessage("");
-    } catch (err) {
-      setError(getErrorMessage(err));
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
-  const doPersonal = async ({ userId, mode }) => {
-    const subject = window.prompt("Enter subject");
-    if (subject === null) return;
-    const message = window.prompt("Enter message");
-    if (message === null) return;
-
-    setActionLoading(true);
-    setError("");
-    try {
-      const payload = {
-        subject,
-        message,
-        sendEmail: mode === "email" || mode === "both",
-        sendInApp: mode === "notify" || mode === "both",
-      };
-      await notificationService.alertUser(userId, payload);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -246,7 +217,6 @@ const Dashboard = () => {
         fullName: createFullName,
         emailPrefix: createEmailPrefix,
         domain: createDomain,
-        personalEmail: createPersonalEmail,
       };
       const res = await employeeService.createEmployeeUser(payload);
       const cred = res?.credentials;
@@ -269,7 +239,6 @@ const Dashboard = () => {
       setCreateEmployeeId("");
       setCreateFullName("");
       setCreateEmailPrefix("");
-<<<<<<< Updated upstream
       setCreateDomain("");
     } catch (err) {
       setError(getErrorMessage(err));
@@ -297,9 +266,6 @@ const Dashboard = () => {
     try {
       const record = await attendanceService.breakEnd();
       setAttendanceToday(record);
-=======
-      setCreatePersonalEmail("");
->>>>>>> Stashed changes
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -341,28 +307,10 @@ const Dashboard = () => {
           <Card className="pad" style={{ marginBottom: 12 }}>
             <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
               <div>
-                <div className="ui-title">Send Alert to All Employees</div>
+                <div className="ui-title">Send In-App Message to All Employees</div>
                 <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
-                  Send a common email and/or in-app alert to everyone.
+                  This sends an in-app alert (no email).
                 </div>
-              </div>
-              <div className="ui-row gap-10" style={{ flexWrap: "wrap" }}>
-                <label className="ui-small ui-row gap-8" style={{ alignItems: "center" }}>
-                  <input
-                    type="checkbox"
-                    checked={broadcastSendEmail}
-                    onChange={(e) => setBroadcastSendEmail(e.target.checked)}
-                  />
-                  Email
-                </label>
-                <label className="ui-small ui-row gap-8" style={{ alignItems: "center" }}>
-                  <input
-                    type="checkbox"
-                    checked={broadcastSendInApp}
-                    onChange={(e) => setBroadcastSendInApp(e.target.checked)}
-                  />
-                  In-app
-                </label>
               </div>
             </div>
 
@@ -390,7 +338,7 @@ const Dashboard = () => {
                   actionLoading ||
                   !String(broadcastSubject).trim() ||
                   !String(broadcastMessage).trim() ||
-                  (!broadcastSendEmail && !broadcastSendInApp)
+                  false
                 }
               >
                 {actionLoading ? "Sending..." : "Send Alert"}
@@ -399,27 +347,7 @@ const Dashboard = () => {
 
             {broadcastResult ? (
               <div className="ui-small ui-muted" style={{ marginTop: 10 }}>
-                Sent: {broadcastResult?.sent ?? 0}
-                {broadcastSendEmail ? (
-                  <> | Skipped (missing personal email): {broadcastResult?.skipped ?? 0}</>
-                ) : null}
-                {broadcastSendEmail ? (
-                  <> | Failed: {broadcastResult?.failed ?? 0}</>
-                ) : null}
-                {broadcastSendInApp ? (
-                  <> | In-app created: {broadcastResult?.notificationsCreated ?? 0}</>
-                ) : null}
-
-                {broadcastResult?.failures?.length ? (
-                  <div style={{ marginTop: 6 }}>
-                    <div style={{ fontWeight: 900, marginBottom: 4 }}>Failures (sample)</div>
-                    {(broadcastResult.failures || []).slice(0, 3).map((f, idx) => (
-                      <div key={`${f.email}-${idx}`} style={{ marginBottom: 2 }}>
-                        {f.email}: {String(f.error || "").slice(0, 140)}
-                      </div>
-                    ))}
-                  </div>
-                ) : null}
+                In-app created: {broadcastResult?.notificationsCreated ?? 0}
               </div>
             ) : null}
           </Card>
@@ -455,12 +383,6 @@ const Dashboard = () => {
                 value={createFullName}
                 onChange={(e) => setCreateFullName(e.target.value)}
                 placeholder="Full Name (optional)"
-              />
-              <input
-                className="dash-search"
-                value={createPersonalEmail}
-                onChange={(e) => setCreatePersonalEmail(e.target.value)}
-                placeholder="Personal email (for alerts)"
               />
               <input
                 className="dash-search"
@@ -551,7 +473,6 @@ const Dashboard = () => {
               const empId = e?.user?.employeeId || "";
               const pic = e?.personal?.profilePictureUrl || "";
               const dot = dotClassFromStatus(null);
-              const userId = e?.user?._id || e?.user?.id || "";
               return (
                 <div
                   key={e?._id || email}
@@ -577,57 +498,9 @@ const Dashboard = () => {
                         <div className="employee-id-employeedashboard">{empId || email}</div>
                       </div>
                     </div>
-<<<<<<< Updated upstream
                     <div className={`employee-status-employeedashboard ${dot}-employeedashboard`} />
                   </div>
                 </div>
-=======
-                    <div
-                      className={`ui-dot ${dot}`}
-                      title={String(dot).toUpperCase()}
-                    />
-                  </div>
-
-                  <div className="ui-row gap-8" style={{ marginTop: 10, flexWrap: "wrap" }}>
-                    <Button
-                      variant="ghost"
-                      onClick={(ev) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        if (!userId) return;
-                        doPersonal({ userId, mode: "email" });
-                      }}
-                      disabled={actionLoading || !userId}
-                    >
-                      Email
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={(ev) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        if (!userId) return;
-                        doPersonal({ userId, mode: "notify" });
-                      }}
-                      disabled={actionLoading || !userId}
-                    >
-                      Notify
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      onClick={(ev) => {
-                        ev.preventDefault();
-                        ev.stopPropagation();
-                        if (!userId) return;
-                        doPersonal({ userId, mode: "both" });
-                      }}
-                      disabled={actionLoading || !userId}
-                    >
-                      Both
-                    </Button>
-                  </div>
-                </Card>
->>>>>>> Stashed changes
               );
             })}
           </div>

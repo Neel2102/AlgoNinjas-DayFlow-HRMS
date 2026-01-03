@@ -90,19 +90,8 @@ export const signUp = async (req, res, next) => {
       return sendError(res, "employeeId, email and password are required", 400);
     }
 
-<<<<<<< Updated upstream
     const pwError = validatePassword(password);
     if (pwError) return sendError(res, pwError, 400);
-=======
-    const p = String(password || "");
-    if (p.length < 8 || !/[A-Z]/.test(p) || !/[^A-Za-z0-9]/.test(p)) {
-      return sendError(
-        res,
-        "Password must be at least 8 characters and include one capital letter and one special character",
-        400
-      );
-    }
->>>>>>> Stashed changes
 
     const cleanEmail = normalizeEmail(email);
 
