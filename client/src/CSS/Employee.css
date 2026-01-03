@@ -1,0 +1,627 @@
+/* Employee Dashboard Styles */
+
+/* Layout & Container */
+.container-employeedashboard {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 24px;
+  animation: fadeIn-employeedashboard 0.4s ease-out;
+}
+
+/* Header Section */
+.header-employeedashboard {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.header-left-employeedashboard {
+  flex: 1;
+  min-width: 250px;
+}
+
+.title-employeedashboard {
+  font-size: 2rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+  letter-spacing: -0.02em;
+}
+
+.subtitle-employeedashboard {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.header-actions-employeedashboard {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+/* Error Card */
+.error-card-employeedashboard {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-medium);
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  animation: slideDown-employeedashboard 0.3s ease-out;
+}
+
+.error-text-employeedashboard {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.error-text-employeedashboard::before {
+  content: '⚠';
+  font-size: 1.1rem;
+}
+
+/* Loading State */
+.loading-card-employeedashboard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 40px;
+  text-align: center;
+}
+
+.loading-text-employeedashboard {
+  font-size: 0.95rem;
+  color: var(--text-secondary);
+}
+
+/* Section Card */
+.section-card-employeedashboard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px var(--shadow-sm);
+}
+
+.section-card-employeedashboard:hover {
+  box-shadow: 0 4px 16px var(--shadow-md);
+}
+
+.section-header-employeedashboard {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.section-title-employeedashboard {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.section-desc-employeedashboard {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  margin-top: 6px;
+}
+
+.section-actions-employeedashboard {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+/* Employee Grid */
+.employee-grid-employeedashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.employee-card-employeedashboard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 20px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.employee-card-employeedashboard::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--secondary);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.employee-card-employeedashboard:hover {
+  border-color: var(--border-dark);
+  box-shadow: 0 4px 12px var(--shadow-md);
+  transform: translateY(-2px);
+}
+
+.employee-card-employeedashboard:hover::before {
+  transform: scaleX(1);
+}
+
+.employee-card-employeedashboard:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.employee-content-employeedashboard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+
+.employee-left-employeedashboard {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex: 1;
+  min-width: 0;
+}
+
+.employee-avatar-employeedashboard {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  border: 2px solid var(--border-medium);
+  background: var(--bg-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary);
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.employee-avatar-employeedashboard img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.employee-info-employeedashboard {
+  min-width: 0;
+  flex: 1;
+}
+
+.employee-name-employeedashboard {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-primary);
+  margin: 0 0 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.employee-id-employeedashboard {
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.employee-status-employeedashboard {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid var(--border-light);
+  flex-shrink: 0;
+  animation: pulse-employeedashboard 2s ease-in-out infinite;
+}
+
+.employee-status-employeedashboard.present-employeedashboard {
+  background: var(--secondary);
+  box-shadow: 0 0 8px var(--shadow-md);
+}
+
+.employee-status-employeedashboard.absent-employeedashboard {
+  background: var(--border-dark);
+}
+
+/* Quick Actions Grid */
+.quickactions-grid-employeedashboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.quickaction-card-employeedashboard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 10px;
+  padding: 24px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.quickaction-card-employeedashboard::after {
+  content: '→';
+  position: absolute;
+  right: 20px;
+  top: 50%;
+  transform: translateY(-50%) translateX(-10px);
+  font-size: 1.5rem;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: all 0.3s ease;
+}
+
+.quickaction-card-employeedashboard:hover {
+  border-color: var(--secondary);
+  box-shadow: 0 6px 16px var(--shadow-md);
+  transform: translateY(-3px);
+}
+
+.quickaction-card-employeedashboard:hover::after {
+  opacity: 1;
+  transform: translateY(-50%) translateX(0);
+}
+
+.quickaction-card-employeedashboard:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.quickaction-title-employeedashboard {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.quickaction-desc-employeedashboard {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Attendance Card */
+.attendance-card-employeedashboard {
+  background: linear-gradient(135deg, var(--bg-primary) 0%, var(--bg-secondary) 100%);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.attendance-header-employeedashboard {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 20px;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.attendance-info-employeedashboard {
+  flex: 1;
+  min-width: 200px;
+}
+
+.attendance-title-employeedashboard {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 6px 0;
+}
+
+.attendance-user-employeedashboard {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+.attendance-buttons-employeedashboard {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.divider-employeedashboard {
+  height: 1px;
+  background: var(--border-medium);
+  margin: 20px 0;
+}
+
+.attendance-details-employeedashboard {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.attendance-item-employeedashboard {
+  font-size: 0.9rem;
+  color: var(--text-primary);
+}
+
+.attendance-label-employeedashboard {
+  color: var(--text-secondary);
+  margin-right: 6px;
+}
+
+.attendance-value-employeedashboard {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Buttons */
+.btn-employeedashboard {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+  outline: none;
+  white-space: nowrap;
+}
+
+.btn-employeedashboard:focus {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+.btn-primary-employeedashboard {
+  background: var(--secondary);
+  color: var(--text-light);
+  border: none;
+}
+
+.btn-primary-employeedashboard:hover:not(:disabled) {
+  background: var(--secondary-100);
+  box-shadow: 0 4px 12px var(--shadow-md);
+  transform: translateY(-1px);
+}
+
+.btn-primary-employeedashboard:disabled {
+  background: var(--disabled-bg);
+  color: var(--disabled-text);
+  cursor: not-allowed;
+}
+
+.btn-ghost-employeedashboard {
+  background: transparent;
+  color: var(--text-primary);
+  border: 1px solid var(--border-dark);
+}
+
+.btn-ghost-employeedashboard:hover:not(:disabled) {
+  background: var(--hover-light);
+  border-color: var(--secondary);
+}
+
+.btn-ghost-employeedashboard:disabled {
+  background: transparent;
+  color: var(--disabled-text);
+  border-color: var(--disabled-border);
+  cursor: not-allowed;
+}
+
+/* Payroll Card */
+.payroll-card-employeedashboard {
+  background: var(--bg-primary);
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
+  padding: 24px;
+}
+
+.payroll-header-employeedashboard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.payroll-info-employeedashboard {
+  flex: 1;
+  min-width: 200px;
+}
+
+.payroll-title-employeedashboard {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 8px 0;
+}
+
+.payroll-desc-employeedashboard {
+  font-size: 0.9rem;
+  color: var(--text-secondary);
+}
+
+/* Animations */
+@keyframes fadeIn-employeedashboard {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideDown-employeedashboard {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-employeedashboard {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.1);
+  }
+}
+
+/* Responsive Design */
+
+/* Tablet */
+@media (max-width: 1024px) {
+  .container-employeedashboard {
+    padding: 20px;
+  }
+
+  .title-employeedashboard {
+    font-size: 1.75rem;
+  }
+
+  .employee-grid-employeedashboard {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  }
+
+  .quickactions-grid-employeedashboard {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .container-employeedashboard {
+    padding: 16px;
+  }
+
+  .header-employeedashboard {
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .header-actions-employeedashboard {
+    width: 100%;
+  }
+
+  .btn-employeedashboard {
+    flex: 1;
+    min-width: 120px;
+  }
+
+  .title-employeedashboard {
+    font-size: 1.5rem;
+  }
+
+  .section-card-employeedashboard {
+    padding: 20px;
+  }
+
+  .section-header-employeedashboard {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .section-actions-employeedashboard {
+    width: 100%;
+  }
+
+  .employee-grid-employeedashboard {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .quickactions-grid-employeedashboard {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .attendance-header-employeedashboard {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .attendance-buttons-employeedashboard {
+    width: 100%;
+  }
+
+  .attendance-buttons-employeedashboard .btn-employeedashboard {
+    flex: 1;
+  }
+
+  .attendance-details-employeedashboard {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .payroll-header-employeedashboard {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* Small Mobile */
+@media (max-width: 480px) {
+  .container-employeedashboard {
+    padding: 12px;
+  }
+
+  .title-employeedashboard {
+    font-size: 1.3rem;
+  }
+
+  .section-card-employeedashboard {
+    padding: 16px;
+  }
+
+  .employee-card-employeedashboard {
+    padding: 16px;
+  }
+
+  .employee-avatar-employeedashboard {
+    width: 40px;
+    height: 40px;
+    font-size: 0.9rem;
+  }
+
+  .quickaction-card-employeedashboard {
+    padding: 20px;
+  }
+
+  .attendance-card-employeedashboard {
+    padding: 20px;
+  }
+
+  .btn-employeedashboard {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+}

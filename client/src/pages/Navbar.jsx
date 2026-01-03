@@ -107,13 +107,7 @@ class Navbar extends Component {
           {/* Logo and Brand */}
           <div className="navbar-brand-navbar">
             <div className="navbar-logo-navbar">
-              <svg viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="48" height="48" rx="10" fill="currentColor"/>
-                <path d="M14 18C14 16.8954 14.8954 16 16 16H20C21.1046 16 22 16.8954 22 18V30C22 31.1046 21.1046 32 20 32H16C14.8954 32 14 31.1046 14 30V18Z" fill="white"/>
-                <path d="M26 22C26 20.8954 26.8954 20 28 20H32C33.1046 20 34 20.8954 34 22V30C34 31.1046 33.1046 32 32 32H28C26.8954 32 26 31.1046 26 30V22Z" fill="white"/>
-                <circle cx="18" cy="12" r="2" fill="white"/>
-                <circle cx="30" cy="12" r="2" fill="white"/>
-              </svg>
+              <img className="navbar-logoimg-navbar" src="/white.png" alt="Dayflow" />
             </div>
             <span className="navbar-brandname-navbar">Dayflow</span>
           </div>

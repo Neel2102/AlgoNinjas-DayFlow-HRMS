@@ -1,8 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 
-import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
 import * as employeeService from "../../services/employeeService";
+import "../../CSS/Profile.css";
 
 const getErrorMessage = (err) => {
   return (
@@ -82,7 +82,7 @@ const Profile = () => {
         profilePictureUrl,
       });
       setMe(updated);
-      setSuccess("Profile updated");
+      setSuccess("Profile updated successfully!");
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -124,97 +124,109 @@ const Profile = () => {
     }
   };
 
+  const getInitials = () => {
+    const name = fullName || me?.user?.email || "U";
+    return String(name).slice(0, 1).toUpperCase();
+  };
+
   return (
-    <div>
-      <div className="ui-row between" style={{ marginBottom: 12, flexWrap: "wrap", gap: 12 }}>
-        <div>
-          <h1 className="ui-h1">My Profile</h1>
-          <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
-            Manage your personal information
-          </div>
+    <div className="container-profile">
+      {/* Header */}
+      <div className="header-profile">
+        <div className="header-left-profile">
+          <h1 className="title-profile">My Profile</h1>
+          <div className="subtitle-profile">Manage your personal information</div>
         </div>
 
-        <div className="ui-row gap-8" style={{ flexWrap: "wrap" }}>
-          <Button variant={activeTab === "private" ? "primary" : "ghost"} onClick={() => setActiveTab("private")}>Private Info</Button>
-          <Button variant={activeTab === "security" ? "primary" : "ghost"} onClick={() => setActiveTab("security")}>Security</Button>
+        {/* Tab Controls */}
+        <div className="tabs-profile">
+          <button
+            className={`btn-profile ${activeTab === "private" ? "btn-primary-profile" : "btn-ghost-profile"}`}
+            onClick={() => setActiveTab("private")}
+          >
+            Private Info
+          </button>
+          <button
+            className={`btn-profile ${activeTab === "security" ? "btn-primary-profile" : "btn-ghost-profile"}`}
+            onClick={() => setActiveTab("security")}
+          >
+            Security
+          </button>
         </div>
       </div>
 
+      {/* Error Message */}
       {error ? (
-        <Card className="pad" style={{ marginBottom: 12 }}>
-          <div className="ui-small">{error}</div>
-        </Card>
+        <div className="message-card-profile error-message-profile">
+          <div className="message-text-profile">{error}</div>
+        </div>
       ) : null}
 
+      {/* Success Message */}
       {success ? (
-        <Card className="pad" style={{ marginBottom: 12 }}>
-          <div className="ui-small">{success}</div>
-        </Card>
+        <div className="message-card-profile success-message-profile">
+          <div className="message-text-profile">{success}</div>
+        </div>
       ) : null}
 
+      {/* Loading State */}
       {loading ? (
-        <Card className="pad">
-          <div className="ui-small ui-muted">Loading...</div>
-        </Card>
+        <div className="loading-card-profile">
+          <div className="loading-text-profile">Loading profile...</div>
+        </div>
       ) : (
-        <div className="ui-grid" style={{ gridTemplateColumns: "1fr", gap: 12 }}>
-          <Card className="pad" style={{ padding: 18 }}>
-            <div className="ui-row between" style={{ flexWrap: "wrap", gap: 12 }}>
-              <div className="ui-row gap-12">
-                <div
-                  style={{
-                    width: 56,
-                    height: 56,
-                    borderRadius: 999,
-                    border: "1px solid var(--border-medium)",
-                    background: "var(--bg-primary)",
-                    display: "grid",
-                    placeItems: "center",
-                    fontWeight: 1000,
-                    overflow: "hidden",
-                  }}
-                >
-                  {profilePictureUrl ? (
-                    <img
-                      src={profilePictureUrl}
-                      alt="profile"
-                      style={{ width: "100%", height: "100%", objectFit: "cover" }}
-                    />
-                  ) : (
-                    <span>{String(fullName || me?.user?.email || "U").slice(0, 1).toUpperCase()}</span>
-                  )}
+        <>
+          {/* Profile Header Card */}
+          <div className="profile-header-card-profile">
+            <div className="profile-info-profile">
+              <div className="profile-avatar-profile">
+                {profilePictureUrl ? (
+                  <img src={profilePictureUrl} alt="profile" />
+                ) : (
+                  <span>{getInitials()}</span>
+                )}
+              </div>
+              <div className="profile-details-profile">
+                <div className="profile-name-profile">
+                  {me?.personal?.fullName || me?.user?.email}
                 </div>
-                <div>
-                  <div style={{ fontWeight: 1000, fontSize: 16 }}>{me?.personal?.fullName || me?.user?.email}</div>
-                  <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
-                    {me?.user?.employeeId || ""} • {me?.user?.role || ""}
-                  </div>
-                  <div className="ui-small ui-muted" style={{ marginTop: 2 }}>
-                    Email Verified: {me?.user?.isEmailVerified ? "Yes" : "No"}
-                  </div>
+                <div className="profile-meta-profile">
+                  {me?.user?.employeeId || "No ID"} • {me?.user?.role || "Employee"}
+                </div>
+                <div className={`profile-status-profile ${me?.user?.isEmailVerified ? "verified-profile" : ""}`}>
+                  Email {me?.user?.isEmailVerified ? "Verified" : "Not Verified"}
                 </div>
               </div>
             </div>
-          </Card>
+          </div>
 
+          {/* Content Section */}
           {activeTab === "security" ? (
-            <Card className="pad" style={{ padding: 18 }}>
-              <div className="ui-title">Security</div>
-              <div className="ui-divider" style={{ margin: "10px 0" }} />
-              <div className="ui-small ui-muted" style={{ lineHeight: 1.6 }}>
-                Password reset/change can be added next. OTP email verification is implemented.
+            <div className="content-card-profile">
+              <div className="section-title-profile">Security Settings</div>
+              <div className="divider-profile" />
+              <div className="security-info-profile">
+                Password reset and change functionality can be added in the next phase. 
+                OTP email verification is already implemented for enhanced security. 
+                Two-factor authentication (2FA) and session management features are planned for future updates.
               </div>
-            </Card>
+            </div>
           ) : (
-            <Card className="pad" style={{ padding: 18 }}>
-              <div className="ui-title">Private Info</div>
-              <div className="ui-divider" style={{ margin: "10px 0" }} />
+            <div className="content-card-profile">
+              <div className="section-title-profile">Private Information</div>
+              <div className="divider-profile" />
 
-              <form onSubmit={save} style={{ display: "grid", gap: 12 }}>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr", gap: 12 }}>
-                  <div style={{ display: "grid", gap: 6 }}>
-                    <div className="ui-small ui-muted">Full name</div>
-                    <input className="ui-input" value={fullName} onChange={(e) => setFullName(e.target.value)} />
+              <form className="form-profile" onSubmit={save}>
+                <div className="form-grid-profile">
+                  {/* Full Name */}
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Full Name</label>
+                    <input
+                      className="form-input-profile"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                      placeholder="Enter your full name"
+                    />
                   </div>
 
                   <div style={{ display: "grid", gap: 6 }}>
@@ -237,32 +249,64 @@ const Profile = () => {
                     </div>
                   </div>
 
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
-                    <div style={{ display: "grid", gap: 6 }}>
-                      <div className="ui-small ui-muted">Phone</div>
-                      <input className="ui-input" value={phone} onChange={(e) => setPhone(e.target.value)} />
+                  {/* Profile Picture URL */}
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Profile Picture URL</label>
+                    <input
+                      className="form-input-profile"
+                      value={profilePictureUrl}
+                      onChange={(e) => setProfilePictureUrl(e.target.value)}
+                      placeholder="https://example.com/profile.jpg"
+                    />
+                  </div>
+
+                  {/* Phone and Email Row */}
+                  <div className="form-row-double-profile">
+                    <div className="form-row-profile">
+                      <label className="form-label-profile">Phone Number</label>
+                      <input
+                        className="form-input-profile"
+                        value={phone}
+                        onChange={(e) => setPhone(e.target.value)}
+                        placeholder="+1 234 567 8900"
+                      />
                     </div>
-                    <div style={{ display: "grid", gap: 6 }}>
-                      <div className="ui-small ui-muted">Email</div>
-                      <input className="ui-input" value={me?.user?.email || ""} disabled />
+                    <div className="form-row-profile">
+                      <label className="form-label-profile">Email Address</label>
+                      <input
+                        className="form-input-profile"
+                        value={me?.user?.email || ""}
+                        disabled
+                      />
                     </div>
                   </div>
 
-                  <div style={{ display: "grid", gap: 6 }}>
-                    <div className="ui-small ui-muted">Address</div>
-                    <input className="ui-input" value={address} onChange={(e) => setAddress(e.target.value)} />
+                  {/* Address */}
+                  <div className="form-row-profile">
+                    <label className="form-label-profile">Address</label>
+                    <input
+                      className="form-input-profile"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      placeholder="123 Main St, City, Country"
+                    />
                   </div>
                 </div>
 
-                <div className="ui-row" style={{ justifyContent: "flex-end" }}>
-                  <Button variant="primary" type="submit" disabled={!canSave}>
-                    {saving ? "Saving..." : "Save"}
-                  </Button>
+                {/* Form Actions */}
+                <div className="form-actions-profile">
+                  <button
+                    className="btn-profile btn-primary-profile"
+                    type="submit"
+                    disabled={!canSave}
+                  >
+                    {saving ? "Saving..." : "Save Changes"}
+                  </button>
                 </div>
               </form>
-            </Card>
+            </div>
           )}
-        </div>
+        </>
       )}
     </div>
   );

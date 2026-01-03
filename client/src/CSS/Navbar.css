@@ -20,7 +20,7 @@
 .navbar-content-navbar {
   max-width: 1400px;
   margin: 0 auto;
-  padding: 16px 24px;
+  padding: 6px 24px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -31,15 +31,20 @@
 .navbar-brand-navbar {
   display: flex;
   align-items: center;
-  gap: 12px;
+  /* gap: 12px; */
   cursor: pointer;
   z-index: 1001;
 }
 
 .navbar-logo-navbar {
-  width: 40px;
-  height: 40px;
-  color: var(--secondary);
+  width: 60px;
+  height: 60px;
+  /* background: var(--secondary); */
+  border-radius: 10px;
+  /* padding: 6px; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: transform 0.3s ease;
 }
 
@@ -47,9 +52,11 @@
   transform: scale(1.05);
 }
 
-.navbar-logo-navbar svg {
+.navbar-logoimg-navbar {
   width: 100%;
   height: 100%;
+  object-fit: contain;
+  display: block;
 }
 
 .navbar-brandname-navbar {
@@ -446,6 +453,7 @@
   .navbar-logo-navbar {
     width: 36px;
     height: 36px;
+    padding: 5px;
   }
 
   .navbar-brandname-navbar {
@@ -471,6 +479,7 @@
   .navbar-logo-navbar {
     width: 32px;
     height: 32px;
+    padding: 4px;
   }
 
   .navbar-brandname-navbar {

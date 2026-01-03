@@ -1,7 +1,9 @@
 import React from 'react';
+import { useNavigate } from "react-router-dom";
 import '../CSS/Landingpage.css';
 
 const LandingPage = () => {
+  const navigate = useNavigate();
   return (
     <div className="container-landingpage">
       {/* Hero Section */}
@@ -17,8 +19,8 @@ const LandingPage = () => {
               Built for teams that value efficiency and growth.
             </p>
             <div className="hero-buttons-landingpage">
-              <button className="btn-primary-landingpage">Start Free Trial</button>
-              <button className="btn-secondary-landingpage">Watch Demo</button>
+              <button className="btn-primary-landingpage" onClick={() => navigate("/signin")}>Get start</button>
+              {/* <button className="btn-secondary-landingpage">Watch Demo</button> */}
             </div>
             <div className="hero-stats-landingpage">
               <div className="stat-item-landingpage">
@@ -210,7 +212,7 @@ const LandingPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="cta-landingpage">
+      {/* <section className="cta-landingpage">
         <div className="cta-content-landingpage">
           <h2 className="cta-title-landingpage">Ready to Transform Your HR Operations?</h2>
           <p className="cta-subtitle-landingpage">
@@ -222,7 +224,7 @@ const LandingPage = () => {
           </div>
           <p className="cta-note-landingpage">No credit card required • 14-day free trial • Cancel anytime</p>
         </div>
-      </section>
+      </section> */}
 
       {/* Footer */}
       <footer className="footer-landingpage">

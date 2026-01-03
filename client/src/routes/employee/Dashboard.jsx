@@ -6,6 +6,7 @@ import Button from "../../components/common/Button";
 import { useAuth } from "../../context/AuthContext";
 import * as employeeService from "../../services/employeeService";
 import * as attendanceService from "../../services/attendanceService";
+import "../../CSS/Employee.css";
 
 const getErrorMessage = (err) => {
   return (
@@ -226,33 +227,34 @@ const Dashboard = () => {
   };
 
   return (
-    <div>
-      <div className="ui-row between" style={{ marginBottom: 12 }}>
-        <div>
-          <h1 className="ui-h1">Dashboard</h1>
-          <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+    <div className="container-employeedashboard">
+      {/* Header */}
+      <div className="header-employeedashboard">
+        <div className="header-left-employeedashboard">
+          <h1 className="title-employeedashboard">Dashboard</h1>
+          <div className="subtitle-employeedashboard">
             {isAdmin ? "Manage employees, attendance, time off and payroll" : "Your workday at a glance"}
           </div>
         </div>
-        <div className="ui-row gap-10">
-          {!isAdmin ? (
-            <Button variant="ghost" onClick={doLogout}>Log Out</Button>
-          ) : (
-            <Button variant="ghost" onClick={doLogout}>Log Out</Button>
-          )}
+        <div className="header-actions-employeedashboard">
+          <Button className="btn-employeedashboard btn-ghost-employeedashboard" onClick={doLogout}>
+            Log Out
+          </Button>
         </div>
       </div>
 
+      {/* Error Message */}
       {error ? (
-        <Card className="pad" style={{ marginBottom: 12 }}>
-          <div className="ui-small">{error}</div>
-        </Card>
+        <div className="error-card-employeedashboard">
+          <div className="error-text-employeedashboard">{error}</div>
+        </div>
       ) : null}
 
+      {/* Loading State */}
       {loading ? (
-        <Card className="pad">
-          <div className="ui-small ui-muted">Loading...</div>
-        </Card>
+        <div className="loading-card-employeedashboard">
+          <div className="loading-text-employeedashboard">Loading...</div>
+        </div>
       ) : isAdmin ? (
         <>
           <Card className="pad" style={{ marginBottom: 12 }}>
@@ -340,20 +342,36 @@ const Dashboard = () => {
           <Card className="pad" style={{ marginBottom: 12 }}>
             <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
               <div>
-                <div className="ui-title">Employees</div>
-                <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+                <div className="section-title-employeedashboard">Employees</div>
+                <div className="section-desc-employeedashboard">
                   Click a card to view the employee profile
                 </div>
               </div>
-              <div className="ui-row gap-8" style={{ flexWrap: "wrap" }}>
-                <Button variant="ghost" onClick={() => navigate("/admin/attendance")}>Attendance</Button>
-                <Button variant="ghost" onClick={() => navigate("/admin/leaves")}>Time Off</Button>
-                <Button variant="ghost" onClick={() => navigate("/admin/payroll")}>Payroll</Button>
+              <div className="section-actions-employeedashboard">
+                <Button
+                  className="btn-employeedashboard btn-ghost-employeedashboard"
+                  onClick={() => navigate("/admin/attendance")}
+                >
+                  Attendance
+                </Button>
+                <Button
+                  className="btn-employeedashboard btn-ghost-employeedashboard"
+                  onClick={() => navigate("/admin/leaves")}
+                >
+                  Time Off
+                </Button>
+                <Button
+                  className="btn-employeedashboard btn-ghost-employeedashboard"
+                  onClick={() => navigate("/admin/payroll")}
+                >
+                  Payroll
+                </Button>
               </div>
             </div>
           </Card>
 
-          <div className="ui-grid cards">
+          {/* Employee Grid */}
+          <div className="employee-grid-employeedashboard">
             {filteredEmployees.map((e) => {
               const fullName = e?.personal?.fullName || "Employee";
               const email = e?.user?.email || "";
@@ -361,49 +379,33 @@ const Dashboard = () => {
               const pic = e?.personal?.profilePictureUrl || "";
               const dot = dotClassFromStatus(null);
               return (
-                <Card
+                <div
                   key={e?._id || email}
-                  className="pad"
+                  className="employee-card-employeedashboard"
                   role="button"
                   tabIndex={0}
                   onClick={() => navigate(`/admin/employees/${e?._id}`)}
                   onKeyDown={(ev) => {
                     if (ev.key === "Enter") navigate(`/admin/employees/${e?._id}`);
                   }}
-                  style={{ cursor: "pointer" }}
                 >
-                  <div className="ui-row between gap-12">
-                    <div className="ui-row gap-12">
-                      <div
-                        style={{
-                          width: 44,
-                          height: 44,
-                          borderRadius: 999,
-                          border: "1px solid var(--border-medium)",
-                          background: "var(--bg-primary)",
-                          display: "grid",
-                          placeItems: "center",
-                          fontWeight: 900,
-                        }}
-                      >
-                        {pic ? <img src={pic} alt="profile" style={{ width: "100%", height: "100%", borderRadius: 999, objectFit: "cover" }} /> : initials(fullName)}
+                  <div className="employee-content-employeedashboard">
+                    <div className="employee-left-employeedashboard">
+                      <div className="employee-avatar-employeedashboard">
+                        {pic ? (
+                          <img src={pic} alt="profile" />
+                        ) : (
+                          initials(fullName)
+                        )}
                       </div>
-                      <div>
-                        <div style={{ fontWeight: 900 }}>{fullName}</div>
-                        <div className="ui-small ui-muted" style={{ marginTop: 2 }}>{empId || email}</div>
+                      <div className="employee-info-employeedashboard">
+                        <div className="employee-name-employeedashboard">{fullName}</div>
+                        <div className="employee-id-employeedashboard">{empId || email}</div>
                       </div>
                     </div>
-                    <div
-                      style={{
-                        width: 10,
-                        height: 10,
-                        borderRadius: 999,
-                        border: "1px solid var(--border-medium)",
-                        background: dot === "present" ? "var(--secondary)" : "var(--border-dark)",
-                      }}
-                    />
+                    <div className={`employee-status-employeedashboard ${dot}-employeedashboard`} />
                   </div>
-                </Card>
+                </div>
               );
             })}
           </div>
@@ -433,17 +435,18 @@ const Dashboard = () => {
             </Card>
           </div>
 
-          <Card className="pad" style={{ marginBottom: 12 }}>
-            <div className="ui-row between" style={{ marginBottom: 10, flexWrap: "wrap", gap: 10 }}>
-              <div>
-                <div className="ui-title">Today’s Attendance</div>
-                <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+          {/* Attendance Card */}
+          <div className="attendance-card-employeedashboard">
+            <div className="attendance-header-employeedashboard">
+              <div className="attendance-info-employeedashboard">
+                <div className="attendance-title-employeedashboard">Today's Attendance</div>
+                <div className="attendance-user-employeedashboard">
                   {me?.personal?.fullName || user?.email}
                 </div>
               </div>
-              <div className="ui-row gap-8" style={{ flexWrap: "wrap" }}>
+              <div className="attendance-buttons-employeedashboard">
                 <Button
-                  variant="primary"
+                  className="btn-employeedashboard btn-primary-employeedashboard"
                   onClick={doCheckIn}
                   disabled={actionLoading || Boolean(attendanceToday?.checkInAt)}
                 >
@@ -482,24 +485,64 @@ const Dashboard = () => {
                 </Button>
               </div>
             </div>
-            <div className="ui-divider" style={{ margin: "10px 0" }} />
-            <div className="ui-row gap-12" style={{ flexWrap: "wrap" }}>
-              <div className="ui-small"><span className="ui-muted">Date:</span> {attendanceToday?.date || new Date().toISOString().slice(0, 10)}</div>
-              <div className="ui-small"><span className="ui-muted">Status:</span> {attendanceToday?.status || "—"}</div>
-              <div className="ui-small"><span className="ui-muted">Check In:</span> {attendanceToday?.checkInAt ? new Date(attendanceToday.checkInAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
-              <div className="ui-small"><span className="ui-muted">Check Out:</span> {attendanceToday?.checkOutAt ? new Date(attendanceToday.checkOutAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }) : "—"}</div>
-            </div>
-          </Card>
 
-          <Card className="pad">
-            <div className="ui-row between" style={{ flexWrap: "wrap", gap: 10 }}>
-              <div>
-                <div className="ui-title">Payroll</div>
-                <div className="ui-small ui-muted" style={{ marginTop: 6 }}>View salary details (read-only)</div>
+            <div className="divider-employeedashboard" />
+
+            <div className="attendance-details-employeedashboard">
+              <div className="attendance-item-employeedashboard">
+                <span className="attendance-label-employeedashboard">Date:</span>
+                <span className="attendance-value-employeedashboard">
+                  {attendanceToday?.date || new Date().toISOString().slice(0, 10)}
+                </span>
               </div>
-              <Button variant="ghost" onClick={() => navigate("/payroll")}>Open Payroll</Button>
+              <div className="attendance-item-employeedashboard">
+                <span className="attendance-label-employeedashboard">Status:</span>
+                <span className="attendance-value-employeedashboard">
+                  {attendanceToday?.status || "—"}
+                </span>
+              </div>
+              <div className="attendance-item-employeedashboard">
+                <span className="attendance-label-employeedashboard">Check In:</span>
+                <span className="attendance-value-employeedashboard">
+                  {attendanceToday?.checkInAt
+                    ? new Date(attendanceToday.checkInAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "—"}
+                </span>
+              </div>
+              <div className="attendance-item-employeedashboard">
+                <span className="attendance-label-employeedashboard">Check Out:</span>
+                <span className="attendance-value-employeedashboard">
+                  {attendanceToday?.checkOutAt
+                    ? new Date(attendanceToday.checkOutAt).toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                    : "—"}
+                </span>
+              </div>
             </div>
-          </Card>
+          </div>
+
+          {/* Payroll Card */}
+          <div className="payroll-card-employeedashboard">
+            <div className="payroll-header-employeedashboard">
+              <div className="payroll-info-employeedashboard">
+                <div className="payroll-title-employeedashboard">Payroll</div>
+                <div className="payroll-desc-employeedashboard">
+                  View salary details (read-only)
+                </div>
+              </div>
+              <button
+                className="btn-employeedashboard btn-ghost-employeedashboard"
+                onClick={() => navigate("/payroll")}
+              >
+                Open Payroll
+              </button>
+            </div>
+          </div>
         </>
       )}
     </div>
