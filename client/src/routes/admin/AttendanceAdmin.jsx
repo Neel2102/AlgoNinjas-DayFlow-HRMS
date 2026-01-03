@@ -180,8 +180,12 @@ const AttendanceAdmin = () => {
       }
     };
     run();
+    const interval = setInterval(() => {
+      run();
+    }, 8000);
     return () => {
       mounted = false;
+      clearInterval(interval);
     };
   }, [weekAnchor.from]);
 
@@ -305,7 +309,8 @@ const AttendanceAdmin = () => {
 
   const weekChart = useMemo(() => {
     const days = Array.isArray(weekSummary?.days) ? weekSummary.days : [];
-    const maxY = Math.max(1, Number(weekSummary?.totalEmployees) || 0);
+    const maxPresent = Math.max(0, ...days.map((d) => Number(d?.present) || 0));
+    const maxY = Math.max(1, maxPresent);
     const w = 920;
     const h = 180;
     const padX = 20;
@@ -396,7 +401,7 @@ const AttendanceAdmin = () => {
         </Card>
       ) : null}
 
-      <Card className="pad" style={{ marginBottom: 12 }}>
+      {/* <Card className="pad" style={{ marginBottom: 12 }}>
         <div className="ui-title">Attendance Status Types</div>
         <div className="ui-divider" style={{ margin: "10px 0" }} />
         <div className="ui-small ui-muted" style={{ lineHeight: 1.7 }}>
@@ -408,7 +413,7 @@ const AttendanceAdmin = () => {
           <br />
           Leave
         </div>
-      </Card>
+      </Card> */}
 
       <Card className="pad" style={{ marginBottom: 12 }}>
         <div className="ui-row between" style={{ flexWrap: "wrap", gap: 10 }}>
@@ -418,7 +423,7 @@ const AttendanceAdmin = () => {
               {weekAnchor.from} - {weekAnchor.to} • Present employees per day
             </div>
           </div>
-          <div className="ui-small ui-muted">Y-axis: 0 - {weekSummary?.totalEmployees ?? 0}</div>
+          <div className="ui-small ui-muted">Y-axis: 0 - {weekChart.maxY}</div>
         </div>
 
         <div style={{ marginTop: 12, overflowX: "auto" }}>
