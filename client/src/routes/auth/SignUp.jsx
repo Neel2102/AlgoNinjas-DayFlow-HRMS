@@ -39,7 +39,7 @@ const SignUp = () => {
   }, [loading, employeeId, email, password, confirmPassword, passwordMismatch]);
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/", { replace: true });
+    if (isAuthenticated) navigate("/dashboard", { replace: true });
   }, [isAuthenticated, navigate]);
 
   const onSubmit = async (e) => {
@@ -47,7 +47,7 @@ const SignUp = () => {
     setError("");
     try {
       await signUp({ employeeId, email, password });
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(getErrorMessage(err));
     }

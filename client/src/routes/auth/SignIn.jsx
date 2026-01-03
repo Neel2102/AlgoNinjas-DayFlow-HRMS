@@ -27,7 +27,7 @@ const SignIn = () => {
   }, [loading, email, password]);
 
   useEffect(() => {
-    if (isAuthenticated) navigate("/", { replace: true });
+    if (isAuthenticated) navigate("/dashboard", { replace: true });
   }, [isAuthenticated, navigate]);
 
   const onSubmit = async (e) => {
@@ -35,7 +35,7 @@ const SignIn = () => {
     setError("");
     try {
       await signIn({ email, password });
-      navigate("/", { replace: true });
+      navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(getErrorMessage(err));
     }

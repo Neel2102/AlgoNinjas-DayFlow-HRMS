@@ -4,6 +4,12 @@ import LandingPage from './pages/landingpage'
 import Navbar from './pages/navbar'
 import SignIn from "./routes/auth/SignIn";
 import SignUp from "./routes/auth/SignUp";
+import ProtectedRoute from "./components/common/ProtectedRoute";
+import Dashboard from "./routes/employee/Dashboard";
+import Profile from "./routes/employee/Profile";
+import RequireRoleRoute from "./components/common/RequireRoleRoute";
+import EmployeeDetail from "./routes/admin/EmployeeDetail";
+import AttendanceAdmin from "./routes/admin/AttendanceAdmin";
 
 function App() {
   return (
@@ -13,6 +19,16 @@ function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/signin" element={<SignIn />} />
         <Route path="/signup" element={<SignUp />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
+
+          <Route element={<RequireRoleRoute roles={["admin"]} />}>
+            <Route path="/admin/employees/:id" element={<EmployeeDetail />} />
+            <Route path="/admin/attendance" element={<AttendanceAdmin />} />
+          </Route>
+        </Route>
       </Routes>
     </BrowserRouter>
   )
