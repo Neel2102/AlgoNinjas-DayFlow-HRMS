@@ -50,6 +50,12 @@ const Dashboard = () => {
   const [attendanceToday, setAttendanceToday] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
 
+  const [createEmployeeId, setCreateEmployeeId] = useState("");
+  const [createFullName, setCreateFullName] = useState("");
+  const [createEmailPrefix, setCreateEmailPrefix] = useState("");
+  const [createDomain, setCreateDomain] = useState("");
+  const [createdCredentials, setCreatedCredentials] = useState([]);
+
   useEffect(() => {
     let mounted = true;
     const run = async () => {
@@ -131,6 +137,67 @@ const Dashboard = () => {
     }
   };
 
+  const csvEscape = (val) => {
+    const s = String(val ?? "");
+    if (/[",\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  };
+
+  const downloadCsv = () => {
+    const rows = [
+      ["Employee ID", "Name", "Email", "Password"],
+      ...(createdCredentials || []).map((r) => [r.employeeId, r.fullName, r.email, r.password]),
+    ];
+    const csv = rows.map((r) => r.map(csvEscape).join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "dayflow_employees_credentials.csv";
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const doCreateEmployee = async () => {
+    setActionLoading(true);
+    setError("");
+    try {
+      const payload = {
+        employeeId: createEmployeeId,
+        fullName: createFullName,
+        emailPrefix: createEmailPrefix,
+        domain: createDomain,
+      };
+      const res = await employeeService.createEmployeeUser(payload);
+      const cred = res?.credentials;
+      const email = cred?.email || "";
+      const password = cred?.password || "";
+
+      setCreatedCredentials((prev) => [
+        {
+          employeeId: String(createEmployeeId || "").trim(),
+          fullName: String(createFullName || "").trim(),
+          email,
+          password,
+        },
+        ...(prev || []),
+      ]);
+
+      const list = await employeeService.listEmployees();
+      setEmployees(Array.isArray(list) ? list : []);
+
+      setCreateEmployeeId("");
+      setCreateFullName("");
+      setCreateEmailPrefix("");
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   return (
     <div>
       <div className="ui-row between" style={{ marginBottom: 12 }}>
@@ -161,6 +228,88 @@ const Dashboard = () => {
         </Card>
       ) : isAdmin ? (
         <>
+          <Card className="pad" style={{ marginBottom: 12 }}>
+            <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
+              <div>
+                <div className="ui-title">Create Employee</div>
+                <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+                  This generates an organization email and a one-time password for the employee.
+                </div>
+              </div>
+              <div className="ui-row gap-8" style={{ flexWrap: "wrap" }}>
+                <Button
+                  variant="ghost"
+                  onClick={downloadCsv}
+                  disabled={!createdCredentials.length}
+                >
+                  Download Excel (CSV)
+                </Button>
+              </div>
+            </div>
+
+            <div className="ui-grid" style={{ gridTemplateColumns: "repeat(auto-fit, minmax(220px, 1fr))", gap: 10, marginTop: 12 }}>
+              <input
+                className="dash-search"
+                value={createEmployeeId}
+                onChange={(e) => setCreateEmployeeId(e.target.value)}
+                placeholder="Employee ID (e.g. EMP010)"
+              />
+              <input
+                className="dash-search"
+                value={createFullName}
+                onChange={(e) => setCreateFullName(e.target.value)}
+                placeholder="Full Name (optional)"
+              />
+              <input
+                className="dash-search"
+                value={createEmailPrefix}
+                onChange={(e) => setCreateEmailPrefix(e.target.value)}
+                placeholder="Email prefix (e.g. john.doe)"
+              />
+              <input
+                className="dash-search"
+                value={createDomain}
+                onChange={(e) => setCreateDomain(e.target.value)}
+                placeholder="Domain (e.g. dayflow.com)"
+              />
+            </div>
+
+            <div className="ui-row" style={{ marginTop: 10, justifyContent: "flex-end" }}>
+              <Button
+                onClick={doCreateEmployee}
+                disabled={actionLoading || !String(createEmployeeId).trim() || !String(createDomain).trim()}
+              >
+                {actionLoading ? "Creating..." : "Create Employee"}
+              </Button>
+            </div>
+
+            {createdCredentials.length ? (
+              <div style={{ marginTop: 12, overflowX: "auto" }}>
+                <table className="dash-table" style={{ width: "100%" }}>
+                  <thead>
+                    <tr>
+                      <th>Employee ID</th>
+                      <th>Email</th>
+                      <th>Password</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {createdCredentials.map((r, idx) => (
+                      <tr key={`${r.email}-${idx}`}>
+                        <td>{r.employeeId}</td>
+                        <td>{r.email}</td>
+                        <td>{r.password}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+                <div className="ui-small ui-muted" style={{ marginTop: 8 }}>
+                  Passwords are shown only for employees created in this session.
+                </div>
+              </div>
+            ) : null}
+          </Card>
+
           <Card className="pad" style={{ marginBottom: 12 }}>
             <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
               <div>

@@ -20,7 +20,7 @@ a{color:inherit}
   linear-gradient(180deg, rgba(255,255,255,0.55), rgba(255,255,255,0.0) 70%),
   var(--bg-secondary)
 }
-.ui-shell{max-width:1200px;margin:0 auto;padding:20px}
+.ui-shell{max-width:1400px;margin:0 auto;padding:20px}
 
 .ui-card{background:var(--bg-primary);border:var(--ui-border);border-radius:var(--ui-radius-md);box-shadow:var(--ui-shadow)}
 .ui-card.pad{padding:16px}
@@ -71,12 +71,12 @@ a{color:inherit}
 .ui-modal-body{padding:0 16px 16px}
 
 .ui-topbar{position:sticky;top:0;z-index:50;background:rgba(245,245,245,.78);backdrop-filter:blur(12px);border-bottom:1px solid var(--border-light)}
-.ui-topbar-inner{max-width:1200px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.ui-topbar-inner{max-width:1400px;margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 .ui-brand{display:flex;align-items:center;gap:10px;font-weight:1000;letter-spacing:.3px}
 .ui-brand-mark{width:34px;height:34px;border-radius:12px;background:var(--secondary);display:grid;place-items:center;color:var(--text-light);font-weight:1000}
 
 .ui-right{display:flex;align-items:center;gap:10px}
-.ui-avatar{width:40px;height:40px;border-radius:999px;border:1px solid var(--border-medium);background:var(--bg-primary);display:grid;place-items:center;font-weight:900;cursor:pointer}
+.ui-avatar{width:40px;height:40px;min-width:40px;flex:0 0 40px;border-radius:999px;border:1px solid var(--border-medium);background:var(--bg-primary);display:grid;place-items:center;font-weight:900;cursor:pointer;overflow:hidden}
 .ui-menu{position:absolute;right:20px;top:62px;width:200px;border:1px solid var(--border-medium);border-radius:14px;background:var(--bg-primary);box-shadow:var(--ui-shadow-strong);padding:8px;display:grid;gap:8px}
 .ui-menu-btn{height:40px;border-radius:12px;border:1px solid var(--border-light);background:var(--bg-primary);cursor:pointer;font-weight:800;text-align:left;padding:0 12px}
 .ui-menu-btn:hover{background:var(--hover-light)}

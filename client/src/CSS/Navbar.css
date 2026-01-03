@@ -161,6 +161,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  font-weight: 800;
+}
+
+.navbar-avatar-navbar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .navbar-avatar-navbar svg {
@@ -335,6 +344,15 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  overflow: hidden;
+  font-weight: 800;
+}
+
+.navbar-mobile-avatar-navbar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
 }
 
 .navbar-mobile-avatar-navbar svg {

@@ -18,11 +18,20 @@ const Profile = () => {
   const [error, setError] = useState("");
   const [activeTab, setActiveTab] = useState("private");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   const [success, setSuccess] = useState("");
   const [fullName, setFullName] = useState("");
   const [phone, setPhone] = useState("");
   const [address, setAddress] = useState("");
   const [profilePictureUrl, setProfilePictureUrl] = useState("");
+  const [selectedFileName, setSelectedFileName] = useState("");
+
+  const profilePicStorageKey = (u) => {
+    const id = u?.id || u?._id || u?.user?.id || u?.user?._id || "";
+    const email = u?.email || u?.user?.email || "";
+    const key = String(id || email || "").trim();
+    return key ? `profile_picture_url:${key}` : "profile_picture_url";
+  };
 
   useEffect(() => {
     let mounted = true;
@@ -38,6 +47,9 @@ const Profile = () => {
         setPhone(res?.personal?.phone || "");
         setAddress(res?.personal?.address || "");
         setProfilePictureUrl(res?.personal?.profilePictureUrl || "");
+        const url = String(res?.personal?.profilePictureUrl || "");
+        localStorage.setItem(profilePicStorageKey(res?.user), url);
+        window.dispatchEvent(new Event("profile_picture_updated"));
       } catch (err) {
         if (!mounted) return;
         setError(getErrorMessage(err));
@@ -75,6 +87,40 @@ const Profile = () => {
       setError(getErrorMessage(err));
     } finally {
       setSaving(false);
+    }
+  };
+
+  const fileToDataUrl = (file) => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result || ""));
+      reader.onerror = () => reject(new Error("Failed to read file"));
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const onPickImage = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setSelectedFileName(file.name || "");
+    setError("");
+    setSuccess("");
+
+    try {
+      setUploading(true);
+      const dataUrl = await fileToDataUrl(file);
+      const updated = await employeeService.uploadMyProfilePicture({ dataUrl });
+      setMe(updated);
+      const url = String(updated?.personal?.profilePictureUrl || "");
+      setProfilePictureUrl(url);
+      localStorage.setItem(profilePicStorageKey(updated?.user), url);
+      window.dispatchEvent(new Event("profile_picture_updated"));
+      setSuccess("Profile picture updated");
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setUploading(false);
+      e.target.value = "";
     }
   };
 
@@ -172,13 +218,23 @@ const Profile = () => {
                   </div>
 
                   <div style={{ display: "grid", gap: 6 }}>
-                    <div className="ui-small ui-muted">Profile picture URL</div>
-                    <input
-                      className="ui-input"
-                      value={profilePictureUrl}
-                      onChange={(e) => setProfilePictureUrl(e.target.value)}
-                      placeholder="https://..."
-                    />
+                    <div className="ui-small ui-muted">Profile picture</div>
+                    <div className="ui-row gap-10" style={{ flexWrap: "wrap" }}>
+                      <input
+                        className="ui-input"
+                        type="file"
+                        accept="image/*"
+                        onChange={onPickImage}
+                        disabled={uploading || saving}
+                        style={{ width: 320 }}
+                      />
+                      <Button variant="ghost" type="button" disabled>
+                        {selectedFileName ? selectedFileName : uploading ? "Uploading..." : "Choose image"}
+                      </Button>
+                    </div>
+                    <div className="ui-small ui-muted" style={{ marginTop: 6, lineHeight: 1.5 }}>
+                      Uploads to Cloudinary and updates your profile picture everywhere.
+                    </div>
                   </div>
 
                   <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>

@@ -14,7 +14,7 @@ import payrollRoutes from "./routes/payrollRoutes.js";
 import devRoutes from "./routes/devRoutes.js";
 import { errorHandler, notFound } from "./middlewares/errorMiddleware.js";
 
-app.use(express.json());
+app.use(express.json({ limit: "10mb" }));
 app.use(cors({ origin: process.env.CORS_ORIGIN || true, credentials: true }));
 app.use(helmet());
 app.use(compression());

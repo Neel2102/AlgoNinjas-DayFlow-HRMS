@@ -1,8 +1,10 @@
 import express from "express";
 import {
+  createEmployeeUser,
   getEmployeeById,
   getMyProfile,
   listEmployees,
+  uploadMyProfilePicture,
   updateEmployeeById,
   updateMyProfile,
 } from "../controllers/employeeController.js";
@@ -13,6 +15,9 @@ const router = express.Router();
 
 router.get("/me", requireAuth, getMyProfile);
 router.put("/me", requireAuth, updateMyProfile);
+router.post("/me/profile-picture", requireAuth, uploadMyProfilePicture);
+
+router.post("/create", requireAuth, requireRole("admin", "hr"), createEmployeeUser);
 
 router.get("/", requireAuth, requireRole("admin", "hr"), listEmployees);
 router.get("/:id", requireAuth, requireRole("admin", "hr"), getEmployeeById);

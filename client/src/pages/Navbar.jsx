@@ -22,17 +22,54 @@ class Navbar extends Component {
     this.state = {
       isMenuOpen: false,
       isScrolled: false,
-      isLoggedIn: false // Change this to true to see logged-in state
+      isLoggedIn: false, 
+      avatarUrl: "",
     };
   }
 
   componentDidMount() {
     window.addEventListener('scroll', this.handleScroll);
+    window.addEventListener('profile_picture_updated', this.syncAvatar);
+    window.addEventListener('storage', this.onStorage);
+    this.syncAvatar();
+  }
+
+  componentDidUpdate(prevProps) {
+    const prevKey = this.getAvatarKey(prevProps.user);
+    const nextKey = this.getAvatarKey(this.props.user);
+    if (prevKey !== nextKey) {
+      this.syncAvatar();
+    }
   }
 
   componentWillUnmount() {
     window.removeEventListener('scroll', this.handleScroll);
+    window.removeEventListener('profile_picture_updated', this.syncAvatar);
+    window.removeEventListener('storage', this.onStorage);
   }
+
+  onStorage = (e) => {
+    const key = this.getAvatarKey(this.props.user);
+    if (e && e.key && e.key !== key) return;
+    this.syncAvatar();
+  };
+
+  getAvatarKey = (u) => {
+    const id = u?.id || u?._id || u?.user?.id || u?.user?._id || "";
+    const email = u?.email || u?.user?.email || "";
+    const k = String(id || email || "").trim();
+    return k ? `profile_picture_url:${k}` : "profile_picture_url";
+  };
+
+  syncAvatar = () => {
+    const isLoggedIn = Boolean(this.props.isAuthenticated) || this.state.isLoggedIn;
+    if (!isLoggedIn) {
+      this.setState({ avatarUrl: "" });
+      return;
+    }
+    const url = localStorage.getItem(this.getAvatarKey(this.props.user)) || "";
+    this.setState({ avatarUrl: url });
+  };
 
   handleScroll = () => {
     if (window.scrollY > 50) {
@@ -54,13 +91,15 @@ class Navbar extends Component {
 
   handleLogout = () => {
     if (this.props.onLogout) this.props.onLogout();
-    this.setState({ isLoggedIn: false });
+    this.setState({ isLoggedIn: false, avatarUrl: "" });
   };
 
   render() {
     const { isMenuOpen, isScrolled } = this.state;
     const isLoggedIn = Boolean(this.props.isAuthenticated) || this.state.isLoggedIn;
     const username = this.props.user?.email || "";
+    const avatarUrl = this.state.avatarUrl || "";
+    const avatarFallback = (username || "U").slice(0, 1).toUpperCase();
 
     return (
       <nav className={`navbar-container-navbar ${isScrolled ? 'scrolled-navbar' : ''}`}>
@@ -93,10 +132,11 @@ class Navbar extends Component {
             {isLoggedIn ? (
               <div className="navbar-profile-navbar">
                 <div className="navbar-avatar-navbar">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                    <circle cx="12" cy="7" r="4"/>
-                  </svg>
+                  {avatarUrl ? (
+                    <img src={avatarUrl} alt="profile" />
+                  ) : (
+                    <span>{avatarFallback}</span>
+                  )}
                 </div>
                 <span className="navbar-username-navbar">{username || "User"}</span>
                 <button className="navbar-logout-navbar" onClick={this.handleLogout}>
@@ -152,10 +192,11 @@ class Navbar extends Component {
               <>
                 <div className="navbar-mobile-profile-navbar">
                   <div className="navbar-mobile-avatar-navbar">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                      <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-                      <circle cx="12" cy="7" r="4"/>
-                    </svg>
+                    {avatarUrl ? (
+                      <img src={avatarUrl} alt="profile" />
+                    ) : (
+                      <span>{avatarFallback}</span>
+                    )}
                   </div>
                   <span className="navbar-mobile-username-navbar">{username || "User"}</span>
                 </div>

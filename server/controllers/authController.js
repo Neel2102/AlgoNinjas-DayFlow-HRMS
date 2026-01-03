@@ -87,15 +87,17 @@ export const signUp = async (req, res, next) => {
 
     let finalRole = "employee";
     if (role === "admin") {
-      const required = process.env.ADMIN_SIGNUP_SECRET;
-      if (!required || adminSecret !== required) {
+      const required = String(process.env.ADMIN_SIGNUP_SECRET || "").trim();
+      const provided = String(adminSecret || "").trim();
+      if (!required || provided !== required) {
         return sendError(res, "Not allowed to create admin", 403);
       }
       finalRole = "admin";
     }
     if (role === "hr") {
-      const required = process.env.HR_SIGNUP_SECRET || process.env.ADMIN_SIGNUP_SECRET;
-      if (!required || adminSecret !== required) {
+      const required = String(process.env.HR_SIGNUP_SECRET || process.env.ADMIN_SIGNUP_SECRET || "").trim();
+      const provided = String(adminSecret || "").trim();
+      if (!required || provided !== required) {
         return sendError(res, "Not allowed to create hr", 403);
       }
       finalRole = "hr";

@@ -16,6 +16,11 @@ export const updateMyProfile = async (payload) => {
   return unwrap(res);
 };
 
+export const uploadMyProfilePicture = async ({ dataUrl }) => {
+  const res = await api.post("/employees/me/profile-picture", { dataUrl });
+  return unwrap(res);
+};
+
 export const listEmployees = async () => {
   const res = await api.get("/employees");
   return unwrap(res);
@@ -28,5 +33,10 @@ export const getEmployeeById = async (id) => {
 
 export const updateEmployeeById = async (id, payload) => {
   const res = await api.put(`/employees/${id}`, payload);
+  return unwrap(res);
+};
+
+export const createEmployeeUser = async (payload) => {
+  const res = await api.post("/employees/create", payload);
   return unwrap(res);
 };

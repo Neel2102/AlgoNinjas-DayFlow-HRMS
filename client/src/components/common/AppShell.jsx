@@ -25,6 +25,14 @@ const AppShell = () => {
 
   const [menuOpen, setMenuOpen] = useState(false);
   const [search, setSearch] = useState("");
+  const avatarKey = useMemo(() => {
+    const id = user?.id || user?._id || user?.user?.id || user?.user?._id || "";
+    const email = user?.email || user?.user?.email || "";
+    const k = String(id || email || "").trim();
+    return k ? `profile_picture_url:${k}` : "profile_picture_url";
+  }, [user]);
+
+  const [avatarUrl, setAvatarUrl] = useState("");
 
   const tabs = useMemo(() => {
     if (isAdmin) {
@@ -58,6 +66,23 @@ const AppShell = () => {
     document.addEventListener("click", onDoc);
     return () => document.removeEventListener("click", onDoc);
   }, [menuOpen]);
+
+  useEffect(() => {
+    const sync = () => {
+      if (!user) {
+        setAvatarUrl("");
+        return;
+      }
+      setAvatarUrl(localStorage.getItem(avatarKey) || "");
+    };
+    window.addEventListener("profile_picture_updated", sync);
+    window.addEventListener("storage", sync);
+    sync();
+    return () => {
+      window.removeEventListener("profile_picture_updated", sync);
+      window.removeEventListener("storage", sync);
+    };
+  }, [avatarKey, user]);
 
   const avatarText = initials(user?.email || user?.user?.email || "User");
 
@@ -115,7 +140,11 @@ const AppShell = () => {
               }}
               aria-label="User menu"
             >
-              {avatarText}
+              {avatarUrl ? (
+                <img src={avatarUrl} alt="profile" style={{ width: "100%", height: "100%", borderRadius: 999, objectFit: "cover" }} />
+              ) : (
+                avatarText
+              )}
             </div>
 
             {menuOpen ? (
