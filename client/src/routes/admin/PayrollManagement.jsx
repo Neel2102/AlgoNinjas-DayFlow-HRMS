@@ -125,28 +125,22 @@ const PayrollManagement = () => {
   return (
     <div className="dash-page">
       <div className="dash-shell">
-        <div className="dash-topbar">
-          <div className="dash-tabs">
-            <button className="dash-tab" onClick={() => navigate("/dashboard")}>Back</button>
-            <button className="dash-tab active">Payroll</button>
-            <button className="dash-tab" onClick={() => navigate("/admin/leaves")}>Time Off</button>
-          </div>
-
-          <div className="att-controls">
-            <select className="dash-search" value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)}>
-              <option value="">All employees</option>
-              {employeeOptions.map((o) => (
-                <option key={o.id} value={o.id}>
-                  {o.label}
-                </option>
-              ))}
-            </select>
-
-            <input className="dash-search" type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
-          </div>
-        </div>
-
         <div className="dash-body">
+          <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
+            <div className="ui-h2">Payroll</div>
+            <div className="ui-row gap-10" style={{ flexWrap: "wrap" }}>
+              <select className="ui-input" value={selectedUserId} onChange={(e) => setSelectedUserId(e.target.value)} style={{ height: 40 }}>
+                <option value="">All employees</option>
+                {employeeOptions.map((o) => (
+                  <option key={o.id} value={o.id}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+              <input className="ui-input" type="month" value={month} onChange={(e) => setMonth(e.target.value)} style={{ width: 180 }} />
+            </div>
+          </div>
+
           {error ? <div className="dash-note">{error}</div> : null}
           {success ? <div className="dash-note">{success}</div> : null}
 

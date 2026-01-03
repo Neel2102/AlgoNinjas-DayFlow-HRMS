@@ -72,26 +72,18 @@ const EmployeeList = () => {
   return (
     <div className="dash-page">
       <div className="dash-shell">
-        <div className="dash-topbar">
-          <div className="dash-tabs">
-            <button className="dash-tab" onClick={() => navigate("/dashboard")}>Back</button>
-            <button className="dash-tab active">Employees</button>
-            <button className="dash-tab" onClick={() => navigate("/admin/attendance")}>Attendance</button>
-            <button className="dash-tab" onClick={() => navigate("/admin/leaves")}>Time Off</button>
-            <button className="dash-tab" onClick={() => navigate("/admin/payroll")}>Payroll</button>
-          </div>
-
-          <div className="dash-right">
+        <div className="dash-body">
+          <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
+            <div className="ui-h2">Employees</div>
             <input
-              className="dash-search"
+              className="ui-input"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search"
+              style={{ width: 280 }}
             />
           </div>
-        </div>
 
-        <div className="dash-body">
           {error ? <div className="dash-note">{error}</div> : null}
           {loading ? (
             <div className="dash-note">Loading...</div>

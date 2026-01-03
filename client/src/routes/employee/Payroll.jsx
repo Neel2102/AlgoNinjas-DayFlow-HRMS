@@ -58,19 +58,12 @@ const Payroll = () => {
   return (
     <div className="dash-page">
       <div className="dash-shell">
-        <div className="dash-topbar">
-          <div className="dash-tabs">
-            <button className="dash-tab" onClick={() => navigate("/dashboard")}>Back</button>
-            <button className="dash-tab active">Payroll</button>
-            <button className="dash-tab" onClick={() => navigate("/leaves")}>Time Off</button>
-          </div>
-
-          <div className="att-controls">
-            <input className="dash-search" type="month" value={month} onChange={(e) => setMonth(e.target.value)} />
-          </div>
-        </div>
-
         <div className="dash-body">
+          <div className="ui-row between gap-12" style={{ flexWrap: "wrap" }}>
+            <div className="ui-h2">Payroll</div>
+            <input className="ui-input" type="month" value={month} onChange={(e) => setMonth(e.target.value)} style={{ width: 180 }} />
+          </div>
+
           {error ? <div className="dash-note">{error}</div> : null}
 
           {loading ? (
