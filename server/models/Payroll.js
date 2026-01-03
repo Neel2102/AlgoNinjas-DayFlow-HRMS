@@ -24,8 +24,6 @@ const payrollSchema = new mongoose.Schema(
     grossPay: { type: Number, default: 0 },
     deductions: { type: Number, default: 0 },
     netPay: { type: Number, default: 0 },
-    workingDays: { type: Number, default: 0 },
-    payableDays: { type: Number, default: 0 },
     lopDays: { type: Number, default: 0 },
     lopAmount: { type: Number, default: 0 },
     currency: { type: String, trim: true, default: "INR" },

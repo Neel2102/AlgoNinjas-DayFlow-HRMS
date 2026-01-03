@@ -84,16 +84,24 @@ const applyLop = ({ computed, attendance }) => {
   const payableDays = Math.max(0, Number(attendance.payableDays) || 0);
   const lopDays = Math.max(0, Number(attendance.lopDays) || 0);
 
-  const perDayRate = workingDays > 0 ? baseGrossPay / workingDays : 0;
-  const lopAmount = Math.max(0, lopDays * perDayRate);
+  const roundMoney = (n) => Math.round((Number(n) || 0) * 100) / 100;
 
-  const grossPay = Math.max(0, baseGrossPay - lopAmount);
-  const netPay = Math.max(0, grossPay - deductions);
+  const ratio = workingDays > 0 ? Math.min(1, Math.max(0, payableDays / workingDays)) : 0;
+  const grossPayRaw = Math.max(0, baseGrossPay * ratio);
+  const rawDeductionsApplied = Math.max(0, deductions * ratio);
+  const deductionsAppliedRaw = Math.min(rawDeductionsApplied, grossPayRaw);
+  const lopAmountRaw = Math.max(0, baseGrossPay - grossPayRaw);
+  const netPayRaw = Math.max(0, grossPayRaw - deductionsAppliedRaw);
+
+  const grossPay = Math.round(grossPayRaw);
+  const deductionsApplied = Math.min(Math.round(deductionsAppliedRaw), grossPay);
+  const lopAmount = Math.round(lopAmountRaw);
+  const netPay = Math.max(0, Math.round(netPayRaw));
 
   return {
-    baseGrossPay,
+    baseGrossPay: Math.round(baseGrossPay),
     grossPay,
-    deductions,
+    deductions: deductionsApplied,
     netPay,
     workingDays,
     payableDays,
