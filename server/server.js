@@ -17,6 +17,8 @@ app.use(express.json());
 app.use(cors({ origin: process.env.CORS_ORIGIN || true, credentials: true }));
 app.use(helmet());
 app.use(compression());
+connectDB();
+
 
 app.get("/", (req, res) => {
   res.send("Server is running");
@@ -33,7 +35,5 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`server is running on port http://localhost:${PORT}`);
 });
-
-connectDB();
