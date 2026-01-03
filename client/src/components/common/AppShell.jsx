@@ -24,7 +24,6 @@ const AppShell = () => {
   const isAdmin = role === "admin" || role === "hr";
 
   const [menuOpen, setMenuOpen] = useState(false);
-  const [search, setSearch] = useState("");
   const avatarKey = useMemo(() => {
     const id = user?.id || user?._id || user?.user?.id || user?.user?._id || "";
     const email = user?.email || user?.user?.email || "";
@@ -124,14 +123,6 @@ const AppShell = () => {
           </div>
 
           <div className="ui-right" data-ui-menu>
-            <input
-              className="ui-input"
-              placeholder="Search"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              style={{ width: 260 }}
-            />
-
             <div
               className="ui-avatar"
               role="button"
@@ -160,7 +151,7 @@ const AppShell = () => {
       </div>
 
       <div className="ui-shell">
-        <Outlet context={{ shellSearch: search }} />
+        <Outlet context={{ shellSearch: "" }} />
       </div>
     </div>
   );

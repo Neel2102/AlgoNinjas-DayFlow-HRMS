@@ -194,17 +194,6 @@ const LeaveApproval = () => {
             </div>
           </Modal>
 
-          <div className="ui-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginBottom: 12, gap: 12 }}>
-            <Card className="pad">
-              <div className="ui-title">Paid time off</div>
-              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>24 Days Available</div>
-            </Card>
-            <Card className="pad">
-              <div className="ui-title">Sick time off</div>
-              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>07 Days Available</div>
-            </Card>
-          </div>
-
           <Card className="pad" padded={false}>
           {loading ? (
             <div className="pad" style={{ padding: 16 }}>
