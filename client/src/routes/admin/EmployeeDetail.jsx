@@ -43,6 +43,8 @@ const EmployeeDetail = () => {
   const [success, setSuccess] = useState("");
 
   const [salary, setSalary] = useState({
+    monthlyWage: "",
+    yearlyWage: "",
     basic: 0,
     hra: 0,
     da: 0,
@@ -83,9 +85,14 @@ const EmployeeDetail = () => {
     };
   }, [salary]);
 
+  const computedMonthlyWage = totals.earnings;
+  const computedYearlyWage = totals.earnings * 12;
+
   const syncFormFromEmployee = (emp) => {
     const s = emp?.salary || {};
     setSalary({
+      monthlyWage: s.monthlyWage ? s.monthlyWage : "",
+      yearlyWage: s.yearlyWage ? s.yearlyWage : "",
       basic: s.basic ?? 0,
       hra: s.hra ?? 0,
       da: s.da ?? 0,
@@ -166,6 +173,8 @@ const EmployeeDetail = () => {
       const payload = {
         salary: {
           ...salary,
+          monthlyWage: Number(computedMonthlyWage) || 0,
+          yearlyWage: Number(computedYearlyWage) || 0,
           basic: Number(salary.basic) || 0,
           hra: Number(salary.hra) || 0,
           da: Number(salary.da) || 0,
@@ -262,10 +271,10 @@ const EmployeeDetail = () => {
           </div>
 
           <div className="dash-right">
-            <button className={"dash-action-btn secondary"} onClick={toggleEdit} disabled={saving}>
+            <button className="dash-action-btn secondary" onClick={toggleEdit} disabled={saving}>
               {editMode ? "Cancel" : "Edit"}
             </button>
-            <button className={"dash-action-btn"} onClick={onSave} disabled={!editMode || saving}>
+            <button className="dash-action-btn" onClick={onSave} disabled={!editMode || saving}>
               {saving ? "Saving..." : "Save"}
             </button>
           </div>
@@ -304,23 +313,129 @@ const EmployeeDetail = () => {
           <div className="att-table-wrap" style={{ marginBottom: 14 }}>
             <div style={{ padding: 12 }}>
               <div style={{ fontWeight: 800, marginBottom: 10 }}>Salary Structure</div>
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                <input className="dash-search" type="number" disabled={!editMode} value={salary.basic} onChange={(e) => setSalary((s) => ({ ...s, basic: e.target.value }))} placeholder="Basic" />
-                <input className="dash-search" type="number" disabled={!editMode} value={salary.hra} onChange={(e) => setSalary((s) => ({ ...s, hra: e.target.value }))} placeholder="HRA" />
-                <input className="dash-search" type="number" disabled={!editMode} value={salary.da} onChange={(e) => setSalary((s) => ({ ...s, da: e.target.value }))} placeholder="DA" />
-                <input className="dash-search" type="number" disabled={!editMode} value={salary.specialAllowance} onChange={(e) => setSalary((s) => ({ ...s, specialAllowance: e.target.value }))} placeholder="Special Allowance" />
-                <input className="dash-search" type="number" disabled={!editMode} value={salary.transportAllowance} onChange={(e) => setSalary((s) => ({ ...s, transportAllowance: e.target.value }))} placeholder="Transport Allowance" />
-                <input className="dash-search" type="number" disabled={!editMode} value={salary.medicalAllowance} onChange={(e) => setSalary((s) => ({ ...s, medicalAllowance: e.target.value }))} placeholder="Medical Allowance" />
-                <input className="dash-search" type="number" disabled={!editMode} value={salary.pf} onChange={(e) => setSalary((s) => ({ ...s, pf: e.target.value }))} placeholder="PF" />
-                <input className="dash-search" type="number" disabled={!editMode} value={salary.professionalTax} onChange={(e) => setSalary((s) => ({ ...s, professionalTax: e.target.value }))} placeholder="Professional Tax" />
-                <input className="dash-search" type="number" disabled={!editMode} value={salary.incomeTax} onChange={(e) => setSalary((s) => ({ ...s, incomeTax: e.target.value }))} placeholder="Income Tax" />
+
+              <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 10, marginBottom: 10 }}>
+                <input
+                  className="dash-search"
+                  type="number"
+                  disabled
+                  value={computedMonthlyWage ? computedMonthlyWage : ""}
+                  placeholder="Monthly wage"
+                />
+                <input
+                  className="dash-search"
+                  type="number"
+                  disabled
+                  value={computedYearlyWage ? computedYearlyWage : ""}
+                  placeholder="Yearly wage"
+                />
               </div>
 
-              <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 10, marginTop: 10 }}>
-                <input className="dash-search" disabled={!editMode} value={salary.currency} onChange={(e) => setSalary((s) => ({ ...s, currency: e.target.value }))} placeholder="Currency" />
+              <div style={{ display: "grid", gridTemplateColumns: "160px 1fr", gap: 10, marginBottom: 10 }}>
+                <input
+                  className="dash-search"
+                  disabled={!editMode}
+                  value={salary.currency}
+                  onChange={(e) => setSalary((s) => ({ ...s, currency: e.target.value }))}
+                  placeholder="Currency"
+                />
                 <div className="dash-note" style={{ marginTop: 0 }}>
-                  Earnings: {totals.earnings} • Deductions: {totals.deductions} • Net: {totals.net}
+                  Monthly earnings: {totals.earnings} • Monthly deductions: {totals.deductions} • Net: {totals.net}
                 </div>
+              </div>
+
+              <div className="att-table-wrap" style={{ border: 0 }}>
+                <table className="att-table" style={{ minWidth: 860 }}>
+                  <thead>
+                    <tr>
+                      <th>Component</th>
+                      <th>Type</th>
+                      <th>Amount / month</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Basic Salary</td>
+                      <td>Earning</td>
+                      <td>
+                        <input className="dash-search" type="number" disabled={!editMode} value={salary.basic} onChange={(e) => setSalary((s) => ({ ...s, basic: e.target.value }))} />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>House Rent Allowance (HRA)</td>
+                      <td>Earning</td>
+                      <td>
+                        <input className="dash-search" type="number" disabled={!editMode} value={salary.hra} onChange={(e) => setSalary((s) => ({ ...s, hra: e.target.value }))} />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Dearness Allowance (DA)</td>
+                      <td>Earning</td>
+                      <td>
+                        <input className="dash-search" type="number" disabled={!editMode} value={salary.da} onChange={(e) => setSalary((s) => ({ ...s, da: e.target.value }))} />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Special Allowance</td>
+                      <td>Earning</td>
+                      <td>
+                        <input className="dash-search" type="number" disabled={!editMode} value={salary.specialAllowance} onChange={(e) => setSalary((s) => ({ ...s, specialAllowance: e.target.value }))} />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Transport Allowance</td>
+                      <td>Earning</td>
+                      <td>
+                        <input className="dash-search" type="number" disabled={!editMode} value={salary.transportAllowance} onChange={(e) => setSalary((s) => ({ ...s, transportAllowance: e.target.value }))} />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Medical Allowance</td>
+                      <td>Earning</td>
+                      <td>
+                        <input className="dash-search" type="number" disabled={!editMode} value={salary.medicalAllowance} onChange={(e) => setSalary((s) => ({ ...s, medicalAllowance: e.target.value }))} />
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td>Provident Fund (PF)</td>
+                      <td>Deduction</td>
+                      <td>
+                        <input className="dash-search" type="number" disabled={!editMode} value={salary.pf} onChange={(e) => setSalary((s) => ({ ...s, pf: e.target.value }))} />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Professional Tax</td>
+                      <td>Deduction</td>
+                      <td>
+                        <input className="dash-search" type="number" disabled={!editMode} value={salary.professionalTax} onChange={(e) => setSalary((s) => ({ ...s, professionalTax: e.target.value }))} />
+                      </td>
+                    </tr>
+                    <tr>
+                      <td>Income Tax</td>
+                      <td>Deduction</td>
+                      <td>
+                        <input className="dash-search" type="number" disabled={!editMode} value={salary.incomeTax} onChange={(e) => setSalary((s) => ({ ...s, incomeTax: e.target.value }))} />
+                      </td>
+                    </tr>
+
+                    <tr>
+                      <td style={{ fontWeight: 900 }}>Total Earnings</td>
+                      <td></td>
+                      <td style={{ fontWeight: 900 }}>{totals.earnings}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 900 }}>Total Deductions</td>
+                      <td></td>
+                      <td style={{ fontWeight: 900 }}>{totals.deductions}</td>
+                    </tr>
+                    <tr>
+                      <td style={{ fontWeight: 900 }}>Net Pay</td>
+                      <td></td>
+                      <td style={{ fontWeight: 900 }}>{totals.net}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
           </div>

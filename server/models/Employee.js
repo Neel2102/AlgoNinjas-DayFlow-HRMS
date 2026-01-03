@@ -38,6 +38,8 @@ const employeeSchema = new mongoose.Schema(
       workPhone: { type: String, trim: true, default: "" },
     },
     salary: {
+      monthlyWage: { type: Number, default: 0 },
+      yearlyWage: { type: Number, default: 0 },
       basic: { type: Number, default: 0 },
       hra: { type: Number, default: 0 },
       da: { type: Number, default: 0 },

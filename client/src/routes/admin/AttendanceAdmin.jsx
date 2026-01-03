@@ -210,20 +210,42 @@ const AttendanceAdmin = () => {
   }, [range.from, range.to, selectedUserId, tab]);
 
   const tableRows = useMemo(() => {
-    const byDate = new Map((rows || []).map((r) => [r?.date, r]));
+    const list = Array.isArray(rows) ? rows : [];
+
+    // When filtering a single employee, show one row per day (with Absent placeholders)
+    if (selectedUserId) {
+      const byDate = new Map(list.map((r) => [r?.date, r]));
+      if (mode === "Day") {
+        const r = byDate.get(range.from);
+        if (!r) return [{ date: range.from, user: null, status: "Absent", checkInAt: null, checkOutAt: null }];
+        return [r];
+      }
+      const out = [];
+      for (let i = 0; i < 7; i += 1) {
+        const key = isoDateKey(addDays(range.start, i));
+        const r = byDate.get(key);
+        out.push(r || { date: key, user: null, status: "Absent", checkInAt: null, checkOutAt: null });
+      }
+      return out;
+    }
+
+    // All employees: show all attendance entries returned by API
     if (mode === "Day") {
-      const r = byDate.get(range.from);
-      if (!r) return [{ date: range.from, user: null, status: "Absent", checkInAt: null, checkOutAt: null }];
-      return [r];
+      return list
+        .filter((r) => String(r?.date || "") === String(range.from || ""))
+        .sort((a, b) => String(a?.user?.employeeId || "").localeCompare(String(b?.user?.employeeId || "")));
     }
-    const out = [];
-    for (let i = 0; i < 7; i += 1) {
-      const key = isoDateKey(addDays(range.start, i));
-      const r = byDate.get(key);
-      out.push(r || { date: key, user: null, status: "Absent", checkInAt: null, checkOutAt: null });
-    }
-    return out;
-  }, [rows, mode, range.from, range.start]);
+
+    // Week: show all rows in range, grouped by date (sorted)
+    return list
+      .slice()
+      .sort((a, b) => {
+        const da = String(a?.date || "");
+        const db = String(b?.date || "");
+        if (da !== db) return da.localeCompare(db);
+        return String(a?.user?.employeeId || "").localeCompare(String(b?.user?.employeeId || ""));
+      });
+  }, [rows, mode, range.from, range.start, selectedUserId]);
 
   const employeeOptions = useMemo(() => {
     return (employees || []).map((e) => ({

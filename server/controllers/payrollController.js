@@ -5,77 +5,58 @@ import { sendError, sendSuccess } from "../utils/responseHandler.js";
 
 const monthRegex = /^\d{4}-\d{2}$/;
 
-const isoDateKey = (d) => new Date(d).toISOString().slice(0, 10);
+const dateKey = (d) => new Date(d).toISOString().slice(0, 10);
 
 const monthRange = (month) => {
-  const clean = String(month || "").trim();
-  if (!monthRegex.test(clean)) return null;
-  const [y, m] = clean.split("-").map((x) => Number(x));
-  const start = new Date(y, m - 1, 1);
-  const end = new Date(y, m, 0);
+  const [y, m] = String(month).split("-").map((x) => Number(x));
+  const start = new Date(y, (m || 1) - 1, 1);
+  const end = new Date(y, (m || 1), 0);
   start.setHours(0, 0, 0, 0);
   end.setHours(0, 0, 0, 0);
-  return { start, end, from: isoDateKey(start), to: isoDateKey(end), month: clean };
+  return { start, end };
 };
 
-const enumerateDates = (start, end) => {
-  const out = [];
-  const s = new Date(start);
-  const e = new Date(end);
-  s.setHours(0, 0, 0, 0);
-  e.setHours(0, 0, 0, 0);
-  for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
-    out.push(isoDateKey(d));
+const enumerateWorkingDays = (start, end) => {
+  const days = [];
+  for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+    const day = d.getDay();
+    // Mon-Fri only
+    if (day !== 0 && day !== 6) days.push(dateKey(d));
   }
-  return out;
+  return days;
 };
 
-const computeMonthSummary = ({ dates, byDate }) => {
-  let presentDays = 0;
-  let leaveDays = 0;
-  let unpaidLeaveDays = 0;
-  let missingAttendanceDays = 0;
+const statusToPayable = (status) => {
+  if (status === "Present") return 1;
+  if (status === "Half-day") return 0.5;
+  if (status === "Leave") return 1;
+  return 0;
+};
 
-  for (const date of dates) {
-    const r = byDate.get(date);
-    const status = String(r?.status || "Absent");
+const computeAttendanceForMonth = async ({ userId, month }) => {
+  const { start, end } = monthRange(month);
+  const workingDayKeys = enumerateWorkingDays(start, end);
+  const fromKey = workingDayKeys[0] || dateKey(start);
+  const toKey = workingDayKeys[workingDayKeys.length - 1] || dateKey(end);
 
-    if (status === "Present" || status === "Half-day") {
-      presentDays += 1;
-      continue;
-    }
+  const rows = await Attendance.find({
+    user: userId,
+    date: { $gte: fromKey, $lte: toKey },
+  }).select("date status");
 
-    if (status === "Leave") {
-      leaveDays += 1;
-      if (String(r?.leaveType || "") === "Unpaid") unpaidLeaveDays += 1;
-      continue;
-    }
-
-    missingAttendanceDays += 1;
+  const map = new Map();
+  for (const r of rows) {
+    if (r?.date) map.set(String(r.date), String(r.status || ""));
   }
 
-  const totalWorkingDays = dates.length;
-  const payableDays = Math.max(0, totalWorkingDays - unpaidLeaveDays - missingAttendanceDays);
-
-  return {
-    totalWorkingDays,
-    presentDays,
-    leaveDays,
-    unpaidLeaveDays,
-    missingAttendanceDays,
-    payableDays,
-  };
-};
-
-const computeAttendanceSummaryForUserMonth = async ({ userId, month }) => {
-  const mr = monthRange(month);
-  if (!mr) return null;
-  const rows = await Attendance.find({ user: userId, date: { $gte: mr.from, $lte: mr.to } }).select(
-    "date status leaveType"
-  );
-  const byDate = new Map((rows || []).map((r) => [r?.date, r]));
-  const dates = enumerateDates(mr.start, mr.end);
-  return computeMonthSummary({ dates, byDate });
+  const workingDays = workingDayKeys.length;
+  let payableDays = 0;
+  for (const dk of workingDayKeys) {
+    payableDays += statusToPayable(map.get(dk));
+  }
+  payableDays = Math.max(0, payableDays);
+  const lopDays = Math.max(0, workingDays - payableDays);
+  return { workingDays, payableDays, lopDays };
 };
 
 const computeFromSalary = (salary) => {
@@ -94,6 +75,31 @@ const computeFromSalary = (salary) => {
   const netPay = Math.max(0, grossPay - d);
   const currency = String(s.currency || "INR").trim() || "INR";
   return { grossPay, deductions: d, netPay, currency };
+};
+
+const applyLop = ({ computed, attendance }) => {
+  const baseGrossPay = Math.max(0, Number(computed.grossPay) || 0);
+  const deductions = Math.max(0, Number(computed.deductions) || 0);
+  const workingDays = Math.max(0, Number(attendance.workingDays) || 0);
+  const payableDays = Math.max(0, Number(attendance.payableDays) || 0);
+  const lopDays = Math.max(0, Number(attendance.lopDays) || 0);
+
+  const perDayRate = workingDays > 0 ? baseGrossPay / workingDays : 0;
+  const lopAmount = Math.max(0, lopDays * perDayRate);
+
+  const grossPay = Math.max(0, baseGrossPay - lopAmount);
+  const netPay = Math.max(0, grossPay - deductions);
+
+  return {
+    baseGrossPay,
+    grossPay,
+    deductions,
+    netPay,
+    workingDays,
+    payableDays,
+    lopDays,
+    lopAmount,
+  };
 };
 
 export const myPayroll = async (req, res, next) => {
@@ -121,12 +127,13 @@ export const generatePayrollForUser = async (req, res, next) => {
     if (!employee) return sendError(res, "Employee not found", 404);
 
     const computed = computeFromSalary(employee.salary);
-    const attendanceSummary = await computeAttendanceSummaryForUserMonth({ userId, month: cleanMonth });
+    const attendance = await computeAttendanceForMonth({ userId, month: cleanMonth });
+    const refined = applyLop({ computed, attendance });
     const notes = String(req.body?.notes || "Auto-generated from salary structure");
 
     const row = await Payroll.findOneAndUpdate(
       { user: userId, month: cleanMonth },
-      { $set: { ...computed, ...(attendanceSummary || {}), notes } },
+      { $set: { ...computed, ...refined, notes } },
       { new: true, upsert: true }
     ).populate("user", "employeeId email");
 
@@ -153,10 +160,11 @@ export const generatePayrollForAll = async (req, res, next) => {
     for (const e of employees) {
       if (!e?.user) continue;
       const computed = computeFromSalary(e.salary);
-      const attendanceSummary = await computeAttendanceSummaryForUserMonth({ userId: e.user, month: cleanMonth });
+      const attendance = await computeAttendanceForMonth({ userId: e.user, month: cleanMonth });
+      const refined = applyLop({ computed, attendance });
       const row = await Payroll.findOneAndUpdate(
         { user: e.user, month: cleanMonth },
-        { $set: { ...computed, ...(attendanceSummary || {}), notes } },
+        { $set: { ...computed, ...refined, notes } },
         { new: true, upsert: true }
       );
       results.push(row);
