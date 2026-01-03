@@ -49,6 +49,10 @@ a{color:inherit}
 .ui-btn.primary{background:var(--secondary);border-color:var(--secondary);color:var(--text-light)}
 .ui-btn.primary:hover{background:var(--secondary-100)}
 .ui-btn.ghost{background:transparent}
+ .ui-btn.success{background:var(--secondary);border-color:var(--secondary);color:var(--text-light)}
+ .ui-btn.success:hover{background:var(--secondary-100)}
+ .ui-btn.danger{background:#ef4444;border-color:#ef4444;color:#fff}
+ .ui-btn.danger:hover{background:#dc2626}
 
 .ui-tabbar{display:flex;gap:8px;flex-wrap:wrap}
 .ui-tab{height:38px;padding:0 12px;border-radius:999px;border:1px solid var(--border-medium);background:var(--bg-primary);color:var(--text-primary);cursor:pointer;font-weight:800}

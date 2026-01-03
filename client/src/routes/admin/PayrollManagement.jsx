@@ -176,6 +176,9 @@ const PayrollManagement = () => {
                     <th>Month</th>
                     <th>Employee ID</th>
                     <th>Email</th>
+                    <th>Payable Days</th>
+                    <th>Unpaid</th>
+                    <th>Missing</th>
                     <th>Gross</th>
                     <th>Deductions</th>
                     <th>Net</th>
@@ -186,7 +189,7 @@ const PayrollManagement = () => {
                 <tbody>
                   {rows.length === 0 ? (
                     <tr>
-                      <td colSpan={8}>No payroll records.</td>
+                      <td colSpan={11}>No payroll records.</td>
                     </tr>
                   ) : (
                     rows.map((r) => (
@@ -194,6 +197,9 @@ const PayrollManagement = () => {
                         <td>{r?.month || ""}</td>
                         <td>{r?.user?.employeeId || ""}</td>
                         <td>{r?.user?.email || ""}</td>
+                        <td>{r?.payableDays ?? ""}</td>
+                        <td>{r?.unpaidLeaveDays ?? ""}</td>
+                        <td>{r?.missingAttendanceDays ?? ""}</td>
                         <td>{r?.grossPay ?? ""}</td>
                         <td>{r?.deductions ?? ""}</td>
                         <td>{r?.netPay ?? ""}</td>

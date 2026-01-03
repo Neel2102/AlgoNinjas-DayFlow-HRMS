@@ -16,6 +16,8 @@ const leaveSchema = new mongoose.Schema(
     startDate: { type: Date, required: true },
     endDate: { type: Date, required: true },
     remarks: { type: String, trim: true, default: "" },
+    attachmentName: { type: String, trim: true, default: "" },
+    attachmentUrl: { type: String, trim: true, default: "" },
     status: {
       type: String,
       enum: ["Pending", "Approved", "Rejected"],

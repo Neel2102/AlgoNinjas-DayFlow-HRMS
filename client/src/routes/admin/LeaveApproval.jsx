@@ -4,6 +4,7 @@ import { useOutletContext } from "react-router-dom";
 import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
 import Table from "../../components/common/Table";
+import Modal from "../../components/common/Modal";
 import * as employeeService from "../../services/employeeService";
 import * as leaveService from "../../services/leaveService";
 
@@ -26,7 +27,7 @@ const LeaveApproval = () => {
   const [employees, setEmployees] = useState([]);
   const [selectedUserId, setSelectedUserId] = useState("");
   const [status, setStatus] = useState("");
-  const [commentById, setCommentById] = useState({});
+  const [decision, setDecision] = useState({ open: false, id: "", action: "", comment: "" });
 
   const [activeTab, setActiveTab] = useState("timeoff");
 
@@ -77,15 +78,22 @@ const LeaveApproval = () => {
     })).filter((x) => x.id);
   }, [employees]);
 
-  const decide = async ({ id, action }) => {
+  const openDecision = ({ id, action }) => {
+    setError("");
+    setDecision({ open: true, id, action, comment: "" });
+  };
+
+  const submitDecision = async () => {
+    const { id, action, comment } = decision || {};
+    if (!id || !action) return;
     setError("");
     try {
-      const comment = commentById?.[id] || "";
       if (action === "approve") {
         await leaveService.approveLeave({ id, comment });
       } else {
         await leaveService.rejectLeave({ id, comment });
       }
+      setDecision({ open: false, id: "", action: "", comment: "" });
       await load();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -158,7 +166,46 @@ const LeaveApproval = () => {
           </Card>
         </div>
       ) : (
-        <Card className="pad" padded={false}>
+        <>
+          <Modal
+            title={decision?.action === "approve" ? "Approve Time Off" : "Reject Time Off"}
+            open={Boolean(decision?.open)}
+            onClose={() => setDecision({ open: false, id: "", action: "", comment: "" })}
+          >
+            <div style={{ display: "grid", gap: 10 }}>
+              <div style={{ display: "grid", gap: 6 }}>
+                <div className="ui-small ui-muted">Comment (optional)</div>
+                <input
+                  className="ui-input"
+                  value={decision?.comment || ""}
+                  onChange={(e) => setDecision((s) => ({ ...(s || {}), comment: e.target.value }))}
+                  placeholder="Add a note"
+                />
+              </div>
+              <div className="ui-row between" style={{ gap: 10 }}>
+                <Button variant="ghost" onClick={() => setDecision({ open: false, id: "", action: "", comment: "" })}>Cancel</Button>
+                <Button
+                  variant={decision?.action === "approve" ? "success" : "danger"}
+                  onClick={submitDecision}
+                >
+                  {decision?.action === "approve" ? "Approve" : "Reject"}
+                </Button>
+              </div>
+            </div>
+          </Modal>
+
+          <div className="ui-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginBottom: 12, gap: 12 }}>
+            <Card className="pad">
+              <div className="ui-title">Paid time off</div>
+              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>24 Days Available</div>
+            </Card>
+            <Card className="pad">
+              <div className="ui-title">Sick time off</div>
+              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>07 Days Available</div>
+            </Card>
+          </div>
+
+          <Card className="pad" padded={false}>
           {loading ? (
             <div className="pad" style={{ padding: 16 }}>
               <div className="ui-small ui-muted">Loading...</div>
@@ -167,20 +214,18 @@ const LeaveApproval = () => {
             <Table>
               <thead>
                 <tr>
-                  <th>Employee</th>
-                  <th>Email</th>
-                  <th>Type</th>
-                  <th>Start</th>
-                  <th>End</th>
+                  <th>Name</th>
+                  <th>Start Date</th>
+                  <th>End Date</th>
+                  <th>Time off Type</th>
                   <th>Status</th>
-                  <th>Admin Comment</th>
                   <th>Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {filteredRows.length === 0 ? (
                   <tr>
-                    <td colSpan={8}>No time off requests found.</td>
+                    <td colSpan={6}>No time off requests found.</td>
                   </tr>
                 ) : (
                   filteredRows.map((r) => {
@@ -188,26 +233,15 @@ const LeaveApproval = () => {
                     const id = r?._id;
                     return (
                       <tr key={id}>
-                        <td>{r?.user?.employeeId || ""}</td>
-                        <td>{r?.user?.email || ""}</td>
-                        <td>{r?.type || ""}</td>
+                        <td>{r?.employeeName || r?.user?.employeeId || ""}</td>
                         <td>{r?.startDate ? isoDateKey(r.startDate) : ""}</td>
                         <td>{r?.endDate ? isoDateKey(r.endDate) : ""}</td>
+                        <td>{r?.type || ""}</td>
                         <td>{r?.status || ""}</td>
                         <td>
-                          <input
-                            className="ui-input"
-                            style={{ height: 36, borderRadius: 10, width: 220 }}
-                            value={commentById?.[id] ?? r?.adminComment ?? ""}
-                            onChange={(e) => setCommentById((s) => ({ ...s, [id]: e.target.value }))}
-                            placeholder="Add comment"
-                            disabled={!pending}
-                          />
-                        </td>
-                        <td>
                           <div className="ui-row gap-8" style={{ flexWrap: "wrap" }}>
-                            <Button variant="ghost" disabled={!pending} onClick={() => decide({ id, action: "reject" })}>Reject</Button>
-                            <Button variant="primary" disabled={!pending} onClick={() => decide({ id, action: "approve" })}>Approve</Button>
+                            <Button variant="danger" disabled={!pending} onClick={() => openDecision({ id, action: "reject" })}>Reject</Button>
+                            <Button variant="success" disabled={!pending} onClick={() => openDecision({ id, action: "approve" })}>Approve</Button>
                           </div>
                         </td>
                       </tr>
@@ -217,7 +251,8 @@ const LeaveApproval = () => {
               </tbody>
             </Table>
           )}
-        </Card>
+          </Card>
+        </>
       )}
     </div>
   );

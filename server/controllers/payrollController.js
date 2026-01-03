@@ -1,8 +1,82 @@
 import Payroll from "../models/Payroll.js";
 import Employee from "../models/Employee.js";
+import Attendance from "../models/Attendance.js";
 import { sendError, sendSuccess } from "../utils/responseHandler.js";
 
 const monthRegex = /^\d{4}-\d{2}$/;
+
+const isoDateKey = (d) => new Date(d).toISOString().slice(0, 10);
+
+const monthRange = (month) => {
+  const clean = String(month || "").trim();
+  if (!monthRegex.test(clean)) return null;
+  const [y, m] = clean.split("-").map((x) => Number(x));
+  const start = new Date(y, m - 1, 1);
+  const end = new Date(y, m, 0);
+  start.setHours(0, 0, 0, 0);
+  end.setHours(0, 0, 0, 0);
+  return { start, end, from: isoDateKey(start), to: isoDateKey(end), month: clean };
+};
+
+const enumerateDates = (start, end) => {
+  const out = [];
+  const s = new Date(start);
+  const e = new Date(end);
+  s.setHours(0, 0, 0, 0);
+  e.setHours(0, 0, 0, 0);
+  for (let d = new Date(s); d <= e; d.setDate(d.getDate() + 1)) {
+    out.push(isoDateKey(d));
+  }
+  return out;
+};
+
+const computeMonthSummary = ({ dates, byDate }) => {
+  let presentDays = 0;
+  let leaveDays = 0;
+  let unpaidLeaveDays = 0;
+  let missingAttendanceDays = 0;
+
+  for (const date of dates) {
+    const r = byDate.get(date);
+    const status = String(r?.status || "Absent");
+
+    if (status === "Present" || status === "Half-day") {
+      presentDays += 1;
+      continue;
+    }
+
+    if (status === "Leave") {
+      leaveDays += 1;
+      if (String(r?.leaveType || "") === "Unpaid") unpaidLeaveDays += 1;
+      continue;
+    }
+
+    missingAttendanceDays += 1;
+  }
+
+  const totalWorkingDays = dates.length;
+  const payableDays = Math.max(0, totalWorkingDays - unpaidLeaveDays - missingAttendanceDays);
+
+  return {
+    totalWorkingDays,
+    presentDays,
+    leaveDays,
+    unpaidLeaveDays,
+    missingAttendanceDays,
+    payableDays,
+  };
+};
+
+const computeAttendanceSummaryForUserMonth = async ({ userId, month }) => {
+  const mr = monthRange(month);
+  if (!mr) return null;
+  const rows = await Attendance.find({ user: userId, date: { $gte: mr.from, $lte: mr.to } }).select(
+    "date status leaveType"
+  );
+  const byDate = new Map((rows || []).map((r) => [r?.date, r]));
+  const dates = enumerateDates(mr.start, mr.end);
+  return computeMonthSummary({ dates, byDate });
+};
 
 const computeFromSalary = (salary) => {
   const s = salary && typeof salary === "object" ? salary : {};
@@ -47,11 +121,12 @@ export const generatePayrollForUser = async (req, res, next) => {
     if (!employee) return sendError(res, "Employee not found", 404);
 
     const computed = computeFromSalary(employee.salary);
+    const attendanceSummary = await computeAttendanceSummaryForUserMonth({ userId, month: cleanMonth });
     const notes = String(req.body?.notes || "Auto-generated from salary structure");
 
     const row = await Payroll.findOneAndUpdate(
       { user: userId, month: cleanMonth },
-      { $set: { ...computed, notes } },
+      { $set: { ...computed, ...(attendanceSummary || {}), notes } },
       { new: true, upsert: true }
     ).populate("user", "employeeId email");
 
@@ -78,9 +153,10 @@ export const generatePayrollForAll = async (req, res, next) => {
     for (const e of employees) {
       if (!e?.user) continue;
       const computed = computeFromSalary(e.salary);
+      const attendanceSummary = await computeAttendanceSummaryForUserMonth({ userId: e.user, month: cleanMonth });
       const row = await Payroll.findOneAndUpdate(
         { user: e.user, month: cleanMonth },
-        { $set: { ...computed, notes } },
+        { $set: { ...computed, ...(attendanceSummary || {}), notes } },
         { new: true, upsert: true }
       );
       results.push(row);

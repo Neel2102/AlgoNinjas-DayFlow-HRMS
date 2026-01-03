@@ -16,10 +16,34 @@ export const checkOut = async () => {
   return unwrap(res);
 };
 
+export const breakStart = async () => {
+  const res = await api.post("/attendance/break-start");
+  return unwrap(res);
+};
+
+export const breakEnd = async () => {
+  const res = await api.post("/attendance/break-end");
+  return unwrap(res);
+};
+
 export const getMyAttendance = async ({ from, to } = {}) => {
   const params = {};
   if (from) params.from = from;
   if (to) params.to = to;
   const res = await api.get("/attendance/me", { params });
+  return unwrap(res);
+};
+
+export const getMyMonthAttendance = async ({ month } = {}) => {
+  const params = {};
+  if (month) params.month = month;
+  const res = await api.get("/attendance/me/month", { params });
+  return unwrap(res);
+};
+
+export const listPresentByDate = async ({ date } = {}) => {
+  const params = {};
+  if (date) params.date = date;
+  const res = await api.get("/attendance/present", { params });
   return unwrap(res);
 };

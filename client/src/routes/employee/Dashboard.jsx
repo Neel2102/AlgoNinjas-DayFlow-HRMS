@@ -191,6 +191,33 @@ const Dashboard = () => {
       setCreateEmployeeId("");
       setCreateFullName("");
       setCreateEmailPrefix("");
+      setCreateDomain("");
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const doBreakStart = async () => {
+    setActionLoading(true);
+    setError("");
+    try {
+      const record = await attendanceService.breakStart();
+      setAttendanceToday(record);
+    } catch (err) {
+      setError(getErrorMessage(err));
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
+  const doBreakEnd = async () => {
+    setActionLoading(true);
+    setError("");
+    try {
+      const record = await attendanceService.breakEnd();
+      setAttendanceToday(record);
     } catch (err) {
       setError(getErrorMessage(err));
     } finally {
@@ -399,6 +426,11 @@ const Dashboard = () => {
               <div className="ui-title">Time Off</div>
               <div className="ui-small ui-muted" style={{ marginTop: 6 }}>Apply and track requests</div>
             </Card>
+            <Card className="pad" role="button" tabIndex={0} onClick={doLogout}
+              onKeyDown={(e) => { if (e.key === "Enter") doLogout(); }} style={{ cursor: "pointer" }}>
+              <div className="ui-title">Logout</div>
+              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>Sign out of your account</div>
+            </Card>
           </div>
 
           <Card className="pad" style={{ marginBottom: 12 }}>
@@ -416,6 +448,30 @@ const Dashboard = () => {
                   disabled={actionLoading || Boolean(attendanceToday?.checkInAt)}
                 >
                   {attendanceToday?.checkInAt ? "Checked In" : "Check In"}
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={doBreakStart}
+                  disabled={
+                    actionLoading ||
+                    !attendanceToday?.checkInAt ||
+                    Boolean(attendanceToday?.checkOutAt) ||
+                    Boolean(attendanceToday?.breakStartAt)
+                  }
+                >
+                  Start Break
+                </Button>
+                <Button
+                  variant="ghost"
+                  onClick={doBreakEnd}
+                  disabled={
+                    actionLoading ||
+                    !attendanceToday?.checkInAt ||
+                    Boolean(attendanceToday?.checkOutAt) ||
+                    !Boolean(attendanceToday?.breakStartAt)
+                  }
+                >
+                  End Break
                 </Button>
                 <Button
                   variant="ghost"

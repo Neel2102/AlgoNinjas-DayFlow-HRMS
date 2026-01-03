@@ -10,7 +10,16 @@ const Button = ({
   ...props
 }) => {
   const base = "ui-btn";
-  const v = variant === "primary" ? "primary" : variant === "ghost" ? "ghost" : "";
+  const v =
+    variant === "primary"
+      ? "primary"
+      : variant === "ghost"
+        ? "ghost"
+        : variant === "success"
+          ? "success"
+          : variant === "danger"
+            ? "danger"
+            : "";
   return (
     <button
       type={type}

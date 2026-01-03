@@ -16,10 +16,25 @@ const attendanceSchema = new mongoose.Schema(
     },
     checkInAt: { type: Date, default: null },
     checkOutAt: { type: Date, default: null },
+    breaks: {
+      type: [
+        {
+          startAt: { type: Date, required: true },
+          endAt: { type: Date, required: true },
+        },
+      ],
+      default: [],
+    },
+    breakStartAt: { type: Date, default: null },
     status: {
       type: String,
       enum: ["Present", "Absent", "Half-day", "Leave"],
       default: "Present",
+    },
+    leaveType: {
+      type: String,
+      enum: ["Paid", "Sick", "Unpaid"],
+      default: null,
     },
   },
   { timestamps: true }

@@ -81,6 +81,7 @@ const Payroll = () => {
                 <thead>
                   <tr>
                     <th>Month</th>
+                    <th>Payable Days</th>
                     <th>Gross Pay</th>
                     <th>Deductions</th>
                     <th>Net Pay</th>
@@ -91,12 +92,18 @@ const Payroll = () => {
                 <tbody>
                   {displayRows.length === 0 ? (
                     <tr>
-                      <td colSpan={6}>No payroll records for this month.</td>
+                      <td colSpan={7}>No payroll records for this month.</td>
                     </tr>
                   ) : (
                     displayRows.map((r) => (
                       <tr key={r?._id || r?.month}>
                         <td>{r?.month || ""}</td>
+                        <td>
+                          {r?.payableDays ?? ""}
+                          <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+                            {typeof r?.totalWorkingDays === "number" ? `${r.totalWorkingDays} working` : ""}
+                          </div>
+                        </td>
                         <td>{r?.grossPay ?? ""}</td>
                         <td>{r?.deductions ?? ""}</td>
                         <td>{r?.netPay ?? ""}</td>

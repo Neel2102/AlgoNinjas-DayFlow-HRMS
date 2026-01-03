@@ -7,8 +7,8 @@ const unwrap = (res) => {
   return root;
 };
 
-export const applyLeave = async ({ type, startDate, endDate, remarks } = {}) => {
-  const res = await api.post("/leaves", { type, startDate, endDate, remarks });
+export const applyLeave = async ({ type, startDate, endDate, remarks, attachmentName, attachmentUrl } = {}) => {
+  const res = await api.post("/leaves", { type, startDate, endDate, remarks, attachmentName, attachmentUrl });
   return unwrap(res);
 };
 

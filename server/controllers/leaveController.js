@@ -1,5 +1,6 @@
 import Leave from "../models/Leave.js";
 import Attendance from "../models/Attendance.js";
+import Employee from "../models/Employee.js";
 import { sendError, sendSuccess } from "../utils/responseHandler.js";
 
 const dateKey = (d) => new Date(d).toISOString().slice(0, 10);
@@ -18,7 +19,7 @@ const enumerateDates = (start, end) => {
 
 export const applyLeave = async (req, res, next) => {
   try {
-    const { type, startDate, endDate, remarks } = req.body;
+    const { type, startDate, endDate, remarks, attachmentName, attachmentUrl } = req.body;
     if (!type || !startDate || !endDate) {
       return sendError(res, "type, startDate, endDate are required", 400);
     }
@@ -36,6 +37,8 @@ export const applyLeave = async (req, res, next) => {
       startDate: start,
       endDate: end,
       remarks: remarks || "",
+      attachmentName: attachmentName || "",
+      attachmentUrl: attachmentUrl || "",
       status: "Pending",
     });
 
@@ -63,7 +66,20 @@ export const listLeaves = async (req, res, next) => {
     const rows = await Leave.find(filter)
       .populate("user", "employeeId email")
       .sort({ createdAt: -1 });
-    return sendSuccess(res, rows);
+
+    const userIds = rows.map((r) => r?.user?._id).filter(Boolean);
+    const employees = await Employee.find({ user: { $in: userIds } }).select("user personal.fullName");
+    const nameByUserId = new Map(
+      (employees || []).map((e) => [String(e.user), e?.personal?.fullName || ""]) 
+    );
+
+    const enriched = rows.map((r) => {
+      const obj = r.toObject ? r.toObject() : r;
+      const uid = obj?.user?._id ? String(obj.user._id) : "";
+      return { ...obj, employeeName: nameByUserId.get(uid) || "" };
+    });
+
+    return sendSuccess(res, enriched);
   } catch (err) {
     next(err);
   }
@@ -88,7 +104,7 @@ const decide = async ({ req, res, next, status }) => {
       for (const date of days) {
         await Attendance.findOneAndUpdate(
           { user: leave.user, date },
-          { $set: { status: "Leave" } },
+          { $set: { status: "Leave", leaveType: leave.type || null } },
           { upsert: true, new: true }
         );
       }

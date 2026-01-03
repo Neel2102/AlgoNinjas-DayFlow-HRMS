@@ -6,6 +6,7 @@ import Button from "../../components/common/Button";
 import Table from "../../components/common/Table";
 import api from "../../services/api";
 import * as employeeService from "../../services/employeeService";
+import * as attendanceService from "../../services/attendanceService";
 
 const getErrorMessage = (err) => {
   return (
@@ -58,13 +59,75 @@ const hoursBetween = (a, b) => {
   return `${hrs.toFixed(1)}h`;
 };
 
+const breakHours = (r) => {
+  const sessions = Array.isArray(r?.breaks) ? r.breaks : [];
+  let total = 0;
+  for (const s of sessions) {
+    const a = s?.startAt ? new Date(s.startAt).getTime() : NaN;
+    const b = s?.endAt ? new Date(s.endAt).getTime() : NaN;
+    if (!Number.isNaN(a) && !Number.isNaN(b) && b > a) total += b - a;
+  }
+  if (r?.breakStartAt) {
+    const a = new Date(r.breakStartAt).getTime();
+    const n = Date.now();
+    if (!Number.isNaN(a) && n > a) total += n - a;
+  }
+  if (!total) return "";
+  return `${(total / (1000 * 60 * 60)).toFixed(1)}h`;
+};
+
+const netWorkHours = (r) => {
+  if (!r?.checkInAt || !r?.checkOutAt) return "";
+  const a = new Date(r.checkInAt).getTime();
+  const b = new Date(r.checkOutAt).getTime();
+  if (Number.isNaN(a) || Number.isNaN(b) || b <= a) return "";
+  const gross = b - a;
+  const sessions = Array.isArray(r?.breaks) ? r.breaks : [];
+  let br = 0;
+  for (const s of sessions) {
+    const sa = s?.startAt ? new Date(s.startAt).getTime() : NaN;
+    const sb = s?.endAt ? new Date(s.endAt).getTime() : NaN;
+    if (!Number.isNaN(sa) && !Number.isNaN(sb) && sb > sa) br += sb - sa;
+  }
+  const net = Math.max(0, gross - br);
+  return `${(net / (1000 * 60 * 60)).toFixed(1)}h`;
+};
+
+const rowStyle = (r) => {
+  const existsInDb = Boolean(r?._id);
+  const status = String(r?.status || "Absent");
+  const leaveType = String(r?.leaveType || "");
+
+  if (!existsInDb) {
+    return { background: "#f3f4f6" };
+  }
+
+  if (status === "Present" || status === "Half-day") {
+    return { background: "#dcfce7" };
+  }
+
+  if (status === "Leave") {
+    if (leaveType === "Paid" || leaveType === "Sick") return { background: "#dbeafe" };
+    return { background: "#fef9c3" };
+  }
+
+  if (status === "Absent") {
+    return { background: "#fee2e2" };
+  }
+
+  return {};
+};
+
 const AttendanceAdmin = () => {
   const navigate = useNavigate();
+  const [tab, setTab] = useState("present");
   const [mode, setMode] = useState("Day");
   const [anchorDate, setAnchorDate] = useState(() => new Date());
   const [selectedUserId, setSelectedUserId] = useState("");
   const [employees, setEmployees] = useState([]);
   const [rows, setRows] = useState([]);
+  const [presentRows, setPresentRows] = useState([]);
+  const [presentCount, setPresentCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -115,12 +178,23 @@ const AttendanceAdmin = () => {
       setLoading(true);
       setError("");
       try {
+        if (tab === "present") {
+          const payload = await attendanceService.listPresentByDate({ date: range.from });
+          if (!mounted) return;
+          setPresentRows(Array.isArray(payload?.rows) ? payload.rows : []);
+          setPresentCount(Number(payload?.count) || 0);
+          setRows([]);
+          return;
+        }
+
         const params = { from: range.from, to: range.to };
         if (selectedUserId) params.userId = selectedUserId;
         const res = await api.get("/attendance", { params });
         const data = unwrap(res);
         if (!mounted) return;
         setRows(Array.isArray(data) ? data : []);
+        setPresentRows([]);
+        setPresentCount(0);
       } catch (err) {
         if (!mounted) return;
         setError(getErrorMessage(err));
@@ -133,7 +207,7 @@ const AttendanceAdmin = () => {
     return () => {
       mounted = false;
     };
-  }, [range.from, range.to, selectedUserId]);
+  }, [range.from, range.to, selectedUserId, tab]);
 
   const tableRows = useMemo(() => {
     const byDate = new Map((rows || []).map((r) => [r?.date, r]));
@@ -167,12 +241,18 @@ const AttendanceAdmin = () => {
         </div>
 
         <div className="ui-row gap-10" style={{ flexWrap: "wrap" }}>
+          <div className="ui-row gap-8">
+            <Button variant={tab === "present" ? "primary" : "ghost"} onClick={() => setTab("present")}>Present</Button>
+            <Button variant={tab === "records" ? "primary" : "ghost"} onClick={() => setTab("records")}>Records</Button>
+          </div>
+
           <select
             className="ui-input"
             value={selectedUserId}
             onChange={(e) => setSelectedUserId(e.target.value)}
             aria-label="Filter employee"
             style={{ width: 300 }}
+            disabled={tab === "present"}
           >
             <option value="">All employees</option>
             {employeeOptions.map((o) => (
@@ -203,11 +283,60 @@ const AttendanceAdmin = () => {
         </Card>
       ) : null}
 
+      {tab === "present" ? (
+        <Card className="pad" style={{ marginBottom: 12 }}>
+          <div className="ui-row between" style={{ flexWrap: "wrap", gap: 10 }}>
+            <div>
+              <div className="ui-title">Present employees</div>
+              <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+                {titleDateLabel} • {presentCount} present
+              </div>
+            </div>
+            <div className="ui-small ui-muted">Tip: Use Prev/Next to change the day.</div>
+          </div>
+        </Card>
+      ) : null}
+
       <Card className="pad" padded={false}>
         {loading ? (
           <div className="pad" style={{ padding: 16 }}>
             <div className="ui-small ui-muted">Loading...</div>
           </div>
+        ) : tab === "present" ? (
+          <Table>
+            <thead>
+              <tr>
+                <th>Employee ID</th>
+                <th>Email</th>
+                <th>Status</th>
+                <th>Check In</th>
+                <th>Check Out</th>
+                <th>Work Hours</th>
+                <th>Break</th>
+                <th>Net</th>
+              </tr>
+            </thead>
+            <tbody>
+              {presentRows.length === 0 ? (
+                <tr>
+                  <td colSpan={8}>No present employees for this day.</td>
+                </tr>
+              ) : (
+                presentRows.map((r) => (
+                  <tr key={r?._id || `${r?.user?._id}-${r?.date}`} style={rowStyle(r)}> 
+                    <td>{r?.user?.employeeId || ""}</td>
+                    <td>{r?.user?.email || ""}</td>
+                    <td>{r?.status || ""}</td>
+                    <td>{formatTime(r?.checkInAt)}</td>
+                    <td>{formatTime(r?.checkOutAt)}</td>
+                    <td>{hoursBetween(r?.checkInAt, r?.checkOutAt)}</td>
+                    <td>{breakHours(r)}</td>
+                    <td>{netWorkHours(r)}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </Table>
         ) : (
           <Table>
             <thead>
@@ -219,11 +348,13 @@ const AttendanceAdmin = () => {
                 <th>Check In</th>
                 <th>Check Out</th>
                 <th>Work Hours</th>
+                <th>Break</th>
+                <th>Net</th>
               </tr>
             </thead>
             <tbody>
               {tableRows.map((r) => (
-                <tr key={r?._id || `${r?.user?._id || "none"}-${r?.date}`}>
+                <tr key={r?._id || `${r?.user?._id || "none"}-${r?.date}`} style={rowStyle(r)}>
                   <td>{r?.date || ""}</td>
                   <td>{r?.user?.employeeId || ""}</td>
                   <td>{r?.user?.email || ""}</td>
@@ -231,6 +362,8 @@ const AttendanceAdmin = () => {
                   <td>{formatTime(r?.checkInAt)}</td>
                   <td>{formatTime(r?.checkOutAt)}</td>
                   <td>{hoursBetween(r?.checkInAt, r?.checkOutAt)}</td>
+                  <td>{breakHours(r)}</td>
+                  <td>{netWorkHours(r)}</td>
                 </tr>
               ))}
             </tbody>

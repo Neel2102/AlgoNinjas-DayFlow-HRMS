@@ -9,6 +9,16 @@ import transporter from "../config/nodemailer.js";
 
 const normalizeEmail = (email) => String(email || "").trim().toLowerCase();
 
+const validatePassword = (password) => {
+  const p = String(password || "");
+  if (p.length < 8) return "Password must be at least 8 characters";
+  if (!/[a-z]/.test(p)) return "Password must include a lowercase letter";
+  if (!/[A-Z]/.test(p)) return "Password must include an uppercase letter";
+  if (!/\d/.test(p)) return "Password must include a number";
+  if (!/[^A-Za-z0-9]/.test(p)) return "Password must include a special character";
+  return "";
+};
+
 const isEmailVerificationDisabled = () => {
   return String(process.env.DISABLE_EMAIL_VERIFICATION || "false") === "true";
 };
@@ -79,6 +89,9 @@ export const signUp = async (req, res, next) => {
     if (!employeeId || !email || !password) {
       return sendError(res, "employeeId, email and password are required", 400);
     }
+
+    const pwError = validatePassword(password);
+    if (pwError) return sendError(res, pwError, 400);
 
     const cleanEmail = normalizeEmail(email);
 
@@ -291,6 +304,9 @@ export const resetPassword = async (req, res, next) => {
     const otp = String(req.body?.otp || "").trim();
     const newPassword = String(req.body?.newPassword || "");
     if (!email || !otp || !newPassword) return sendError(res, "email, otp and newPassword are required", 400);
+
+    const pwError = validatePassword(newPassword);
+    if (pwError) return sendError(res, pwError, 400);
 
     const user = await User.findOne({ email });
     if (!user) return sendError(res, "Invalid OTP", 400);

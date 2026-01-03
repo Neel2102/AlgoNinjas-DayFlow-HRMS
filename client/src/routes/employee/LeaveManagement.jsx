@@ -5,6 +5,7 @@ import Card from "../../components/common/Card";
 import Button from "../../components/common/Button";
 import Table from "../../components/common/Table";
 import Modal from "../../components/common/Modal";
+import * as employeeService from "../../services/employeeService";
 import * as leaveService from "../../services/leaveService";
 
 const getErrorMessage = (err) => {
@@ -27,6 +28,7 @@ const LeaveManagement = () => {
   const [startDate, setStartDate] = useState(() => isoDateKey(new Date()));
   const [endDate, setEndDate] = useState(() => isoDateKey(new Date()));
   const [remarks, setRemarks] = useState("");
+  const [attachmentName, setAttachmentName] = useState("");
 
   const [showNewModal, setShowNewModal] = useState(false);
   const [activeTab, setActiveTab] = useState("timeoff");
@@ -36,6 +38,7 @@ const LeaveManagement = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [employeeName, setEmployeeName] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -52,6 +55,21 @@ const LeaveManagement = () => {
 
   useEffect(() => {
     load();
+    let mounted = true;
+    const run = async () => {
+      try {
+        const me = await employeeService.getMyProfile();
+        if (!mounted) return;
+        setEmployeeName(me?.personal?.fullName || "");
+      } catch {
+        if (!mounted) return;
+        setEmployeeName("");
+      }
+    };
+    run();
+    return () => {
+      mounted = false;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -69,9 +87,10 @@ const LeaveManagement = () => {
     setError("");
     setSuccess("");
     try {
-      await leaveService.applyLeave({ type, startDate, endDate, remarks });
+      await leaveService.applyLeave({ type, startDate, endDate, remarks, attachmentName });
       setSuccess("Leave request submitted");
       setRemarks("");
+      setAttachmentName("");
       await load();
     } catch (err) {
       setError(getErrorMessage(err));
@@ -145,6 +164,18 @@ const LeaveManagement = () => {
             <input className="ui-input" value={remarks} onChange={(e) => setRemarks(e.target.value)} placeholder="Optional" />
           </div>
 
+          <div style={{ display: "grid", gap: 6 }}>
+            <div className="ui-small ui-muted">Attachment</div>
+            <input
+              className="ui-input"
+              type="file"
+              onChange={(e) => setAttachmentName(e.target?.files?.[0]?.name || "")}
+            />
+            <div className="ui-small ui-muted" style={{ marginTop: 4 }}>
+              {attachmentName ? `Selected: ${attachmentName}` : "Optional (e.g. sick leave certificate)"}
+            </div>
+          </div>
+
           <div className="ui-row between" style={{ marginTop: 4, gap: 10 }}>
             <Button variant="ghost" type="button" onClick={() => setShowNewModal(false)}>Cancel</Button>
             <Button variant="primary" type="submit" disabled={submitting}>{submitting ? "Submitting..." : "Submit"}</Button>
@@ -171,44 +202,55 @@ const LeaveManagement = () => {
           </Card>
         </div>
       ) : (
-        <Card className="pad" padded={false}>
-          {loading ? (
-            <div className="pad" style={{ padding: 16 }}>
-              <div className="ui-small ui-muted">Loading...</div>
-            </div>
-          ) : (
-            <Table>
-              <thead>
-                <tr>
-                  <th>Type</th>
-                  <th>Start</th>
-                  <th>End</th>
-                  <th>Status</th>
-                  <th>Remarks</th>
-                  <th>Admin Comment</th>
-                </tr>
-              </thead>
-              <tbody>
-                {filteredRows.length === 0 ? (
+        <>
+          <div className="ui-grid" style={{ gridTemplateColumns: "repeat(2, minmax(0, 1fr))", marginBottom: 12, gap: 12 }}>
+            <Card className="pad">
+              <div className="ui-title">Paid time off</div>
+              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>24 Days Available</div>
+            </Card>
+            <Card className="pad">
+              <div className="ui-title">Sick time off</div>
+              <div className="ui-small ui-muted" style={{ marginTop: 6 }}>07 Days Available</div>
+            </Card>
+          </div>
+
+          <Card className="pad" padded={false}>
+            {loading ? (
+              <div className="pad" style={{ padding: 16 }}>
+                <div className="ui-small ui-muted">Loading...</div>
+              </div>
+            ) : (
+              <Table>
+                <thead>
                   <tr>
-                    <td colSpan={6}>No time off requests yet.</td>
+                    <th>Name</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+                    <th>Time off Type</th>
+                    <th>Status</th>
                   </tr>
-                ) : (
-                  filteredRows.map((r) => (
-                    <tr key={r?._id}>
-                      <td>{r?.type || ""}</td>
-                      <td>{r?.startDate ? isoDateKey(r.startDate) : ""}</td>
-                      <td>{r?.endDate ? isoDateKey(r.endDate) : ""}</td>
-                      <td>{r?.status || ""}</td>
-                      <td>{r?.remarks || ""}</td>
-                      <td>{r?.adminComment || ""}</td>
+                </thead>
+                <tbody>
+                  {filteredRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={5}>No time off requests yet.</td>
                     </tr>
-                  ))
-                )}
-              </tbody>
-            </Table>
-          )}
-        </Card>
+                  ) : (
+                    filteredRows.map((r) => (
+                      <tr key={r?._id}>
+                        <td>{employeeName || ""}</td>
+                        <td>{r?.startDate ? isoDateKey(r.startDate) : ""}</td>
+                        <td>{r?.endDate ? isoDateKey(r.endDate) : ""}</td>
+                        <td>{r?.type || ""}</td>
+                        <td>{r?.status || ""}</td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </Table>
+            )}
+          </Card>
+        </>
       )}
     </div>
   );
