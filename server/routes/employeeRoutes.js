@@ -14,8 +14,8 @@ const router = express.Router();
 router.get("/me", requireAuth, getMyProfile);
 router.put("/me", requireAuth, updateMyProfile);
 
-router.get("/", requireAuth, requireRole("admin"), listEmployees);
-router.get("/:id", requireAuth, requireRole("admin"), getEmployeeById);
-router.put("/:id", requireAuth, requireRole("admin"), updateEmployeeById);
+router.get("/", requireAuth, requireRole("admin", "hr"), listEmployees);
+router.get("/:id", requireAuth, requireRole("admin", "hr"), getEmployeeById);
+router.put("/:id", requireAuth, requireRole("admin", "hr"), updateEmployeeById);
 
 export default router;

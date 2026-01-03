@@ -11,6 +11,7 @@ import employeeRoutes from "./routes/employeeRoutes.js";
 import attendanceRoutes from "./routes/attendanceRoutes.js";
 import leaveRoutes from "./routes/leaveRoutes.js";
 import payrollRoutes from "./routes/payrollRoutes.js";
+import devRoutes from "./routes/devRoutes.js";
 import { errorHandler, notFound } from "./middlewares/errorMiddleware.js";
 
 app.use(express.json());
@@ -18,7 +19,6 @@ app.use(cors({ origin: process.env.CORS_ORIGIN || true, credentials: true }));
 app.use(helmet());
 app.use(compression());
 connectDB();
-
 
 app.get("/", (req, res) => {
   res.send("Server is running");
@@ -29,6 +29,7 @@ app.use("/api/employees", employeeRoutes);
 app.use("/api/attendance", attendanceRoutes);
 app.use("/api/leaves", leaveRoutes);
 app.use("/api/payroll", payrollRoutes);
+app.use("/api/dev", devRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

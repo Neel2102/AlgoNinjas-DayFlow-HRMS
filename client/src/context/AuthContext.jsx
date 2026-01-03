@@ -53,10 +53,10 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const signUp = async ({ employeeId, email, password }) => {
+  const signUp = async ({ employeeId, email, password, role, adminSecret }) => {
     setLoading(true);
     try {
-      const res = await authService.signUp({ employeeId, email, password });
+      const res = await authService.signUp({ employeeId, email, password, role, adminSecret });
       const payload = extractAuthPayload(res);
       setToken(payload?.token || "");
       setUser(payload?.user || null);

@@ -39,7 +39,7 @@ const Dashboard = () => {
   const { user, signOut } = useAuth();
 
   const role = user?.role || "employee";
-  const isAdmin = role === "admin";
+  const isAdmin = role === "admin" || role === "hr";
 
   const [activeTab, setActiveTab] = useState(isAdmin ? "Employees" : "Attendance");
   const [search, setSearch] = useState("");
@@ -151,13 +151,48 @@ const Dashboard = () => {
   };
 
   const tabs = isAdmin
-    ? ["Company", "Employees", "Attendance", "Time Off"]
-    : ["Company", "Attendance", "Time Off"];
+    ? ["Company", "Employees", "Attendance", "Time Off", "Payroll"]
+    : ["Company", "Attendance", "Time Off", "Payroll"];
 
   useEffect(() => {
     if (!isAdmin) return;
     if (activeTab === "Attendance") {
       navigate("/admin/attendance");
+    }
+  }, [activeTab, isAdmin, navigate]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    if (activeTab === "Time Off") {
+      navigate("/admin/leaves");
+    }
+  }, [activeTab, isAdmin, navigate]);
+
+  useEffect(() => {
+    if (!isAdmin) return;
+    if (activeTab === "Payroll") {
+      navigate("/admin/payroll");
+    }
+  }, [activeTab, isAdmin, navigate]);
+
+  useEffect(() => {
+    if (isAdmin) return;
+    if (activeTab === "Attendance") {
+      navigate("/attendance");
+    }
+  }, [activeTab, isAdmin, navigate]);
+
+  useEffect(() => {
+    if (isAdmin) return;
+    if (activeTab === "Time Off") {
+      navigate("/leaves");
+    }
+  }, [activeTab, isAdmin, navigate]);
+
+  useEffect(() => {
+    if (isAdmin) return;
+    if (activeTab === "Payroll") {
+      navigate("/payroll");
     }
   }, [activeTab, isAdmin, navigate]);
 

@@ -14,8 +14,8 @@ const router = express.Router();
 router.post("/", requireAuth, applyLeave);
 router.get("/me", requireAuth, myLeaves);
 
-router.get("/", requireAuth, requireRole("admin"), listLeaves);
-router.patch("/:id/approve", requireAuth, requireRole("admin"), approveLeave);
-router.patch("/:id/reject", requireAuth, requireRole("admin"), rejectLeave);
+router.get("/", requireAuth, requireRole("admin", "hr"), listLeaves);
+router.patch("/:id/approve", requireAuth, requireRole("admin", "hr"), approveLeave);
+router.patch("/:id/reject", requireAuth, requireRole("admin", "hr"), rejectLeave);
 
 export default router;

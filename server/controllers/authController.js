@@ -33,6 +33,13 @@ export const signUp = async (req, res, next) => {
       }
       finalRole = "admin";
     }
+    if (role === "hr") {
+      const required = process.env.HR_SIGNUP_SECRET || process.env.ADMIN_SIGNUP_SECRET;
+      if (!required || adminSecret !== required) {
+        return sendError(res, "Not allowed to create hr", 403);
+      }
+      finalRole = "hr";
+    }
 
     const passwordHash = await bcrypt.hash(String(password), 10);
     const verificationToken = crypto.randomBytes(24).toString("hex");

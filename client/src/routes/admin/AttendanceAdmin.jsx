@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 
 import "../../CSS/Dashboard.css";
 import api from "../../services/api";
+import * as employeeService from "../../services/employeeService";
 
 const getErrorMessage = (err) => {
   return (
@@ -18,11 +19,93 @@ const unwrap = (res) => {
   return root;
 };
 
+const isoDateKey = (d) => {
+  const dt = new Date(d);
+  return dt.toISOString().slice(0, 10);
+};
+
+const addDays = (d, n) => {
+  const dt = new Date(d);
+  dt.setDate(dt.getDate() + n);
+  return dt;
+};
+
+const startOfWeekMonday = (d) => {
+  const dt = new Date(d);
+  dt.setHours(0, 0, 0, 0);
+  const day = dt.getDay();
+  const diff = (day + 6) % 7;
+  dt.setDate(dt.getDate() - diff);
+  return dt;
+};
+
+const formatTime = (value) => {
+  if (!value) return "";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "";
+  return d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+};
+
+const hoursBetween = (a, b) => {
+  if (!a || !b) return "";
+  const da = new Date(a);
+  const db = new Date(b);
+  const ms = db.getTime() - da.getTime();
+  if (Number.isNaN(ms) || ms <= 0) return "";
+  const hrs = ms / (1000 * 60 * 60);
+  return `${hrs.toFixed(1)}h`;
+};
+
 const AttendanceAdmin = () => {
   const navigate = useNavigate();
+  const [mode, setMode] = useState("Day");
+  const [anchorDate, setAnchorDate] = useState(() => new Date());
+  const [selectedUserId, setSelectedUserId] = useState("");
+  const [employees, setEmployees] = useState([]);
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const range = useMemo(() => {
+    if (mode === "Week") {
+      const start = startOfWeekMonday(anchorDate);
+      const end = addDays(start, 6);
+      return { from: isoDateKey(start), to: isoDateKey(end), start, end };
+    }
+    const key = isoDateKey(anchorDate);
+    return { from: key, to: key, start: new Date(anchorDate), end: new Date(anchorDate) };
+  }, [mode, anchorDate]);
+
+  const titleDateLabel = useMemo(() => {
+    if (mode === "Week") return `${range.from} - ${range.to}`;
+    return range.from;
+  }, [mode, range.from, range.to]);
+
+  const goPrev = () => {
+    setAnchorDate((d) => (mode === "Week" ? addDays(startOfWeekMonday(d), -7) : addDays(d, -1)));
+  };
+
+  const goNext = () => {
+    setAnchorDate((d) => (mode === "Week" ? addDays(startOfWeekMonday(d), 7) : addDays(d, 1)));
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    const run = async () => {
+      try {
+        const list = await employeeService.listEmployees();
+        if (!mounted) return;
+        setEmployees(Array.isArray(list) ? list : []);
+      } catch {
+        if (!mounted) return;
+        setEmployees([]);
+      }
+    };
+    run();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     let mounted = true;
@@ -30,7 +113,9 @@ const AttendanceAdmin = () => {
       setLoading(true);
       setError("");
       try {
-        const res = await api.get("/attendance");
+        const params = { from: range.from, to: range.to };
+        if (selectedUserId) params.userId = selectedUserId;
+        const res = await api.get("/attendance", { params });
         const data = unwrap(res);
         if (!mounted) return;
         setRows(Array.isArray(data) ? data : []);
@@ -46,9 +131,30 @@ const AttendanceAdmin = () => {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [range.from, range.to, selectedUserId]);
 
-  const tableRows = useMemo(() => rows.slice(0, 50), [rows]);
+  const tableRows = useMemo(() => {
+    const byDate = new Map((rows || []).map((r) => [r?.date, r]));
+    if (mode === "Day") {
+      const r = byDate.get(range.from);
+      if (!r) return [{ date: range.from, user: null, status: "Absent", checkInAt: null, checkOutAt: null }];
+      return [r];
+    }
+    const out = [];
+    for (let i = 0; i < 7; i += 1) {
+      const key = isoDateKey(addDays(range.start, i));
+      const r = byDate.get(key);
+      out.push(r || { date: key, user: null, status: "Absent", checkInAt: null, checkOutAt: null });
+    }
+    return out;
+  }, [rows, mode, range.from, range.start]);
+
+  const employeeOptions = useMemo(() => {
+    return (employees || []).map((e) => ({
+      id: e?.user?._id,
+      label: `${e?.user?.employeeId || ""} ${e?.personal?.fullName ? `- ${e.personal.fullName}` : ""}`.trim(),
+    })).filter((x) => x.id);
+  }, [employees]);
 
   return (
     <div className="dash-page">
@@ -58,6 +164,41 @@ const AttendanceAdmin = () => {
             <button className="dash-tab" onClick={() => navigate("/dashboard")}>Back</button>
             <button className="dash-tab active">Attendance</button>
           </div>
+
+          <div className="att-controls">
+            <select
+              className="dash-search"
+              value={selectedUserId}
+              onChange={(e) => setSelectedUserId(e.target.value)}
+              aria-label="Filter employee"
+            >
+              <option value="">All employees</option>
+              {employeeOptions.map((o) => (
+                <option key={o.id} value={o.id}>
+                  {o.label}
+                </option>
+              ))}
+            </select>
+
+            <button className="att-nav" onClick={goPrev} aria-label="Previous">‹</button>
+            <div className="att-date">{titleDateLabel}</div>
+            <button className="att-nav" onClick={goNext} aria-label="Next">›</button>
+
+            <div className="att-seg">
+              <button
+                className={`att-seg-btn ${mode === "Day" ? "active" : ""}`}
+                onClick={() => setMode("Day")}
+              >
+                Day
+              </button>
+              <button
+                className={`att-seg-btn ${mode === "Week" ? "active" : ""}`}
+                onClick={() => setMode("Week")}
+              >
+                Week
+              </button>
+            </div>
+          </div>
         </div>
 
         <div className="dash-body">
@@ -65,32 +206,33 @@ const AttendanceAdmin = () => {
           {loading ? (
             <div className="dash-note">Loading...</div>
           ) : (
-            <div style={{ overflowX: "auto", border: "1px solid rgba(255,255,255,0.22)" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse" }}>
+            <div className="att-table-wrap">
+              <table className="att-table">
                 <thead>
                   <tr>
-                    <th style={{ textAlign: "left", padding: 10, borderBottom: "1px solid rgba(255,255,255,0.22)" }}>Date</th>
-                    <th style={{ textAlign: "left", padding: 10, borderBottom: "1px solid rgba(255,255,255,0.22)" }}>Employee ID</th>
-                    <th style={{ textAlign: "left", padding: 10, borderBottom: "1px solid rgba(255,255,255,0.22)" }}>Email</th>
-                    <th style={{ textAlign: "left", padding: 10, borderBottom: "1px solid rgba(255,255,255,0.22)" }}>Status</th>
-                    <th style={{ textAlign: "left", padding: 10, borderBottom: "1px solid rgba(255,255,255,0.22)" }}>Check In</th>
-                    <th style={{ textAlign: "left", padding: 10, borderBottom: "1px solid rgba(255,255,255,0.22)" }}>Check Out</th>
+                    <th>Date</th>
+                    <th>Employee ID</th>
+                    <th>Email</th>
+                    <th>Status</th>
+                    <th>Check In</th>
+                    <th>Check Out</th>
+                    <th>Work Hours</th>
                   </tr>
                 </thead>
                 <tbody>
                   {tableRows.map((r) => (
-                    <tr key={r?._id || `${r?.user?._id}-${r?.date}`}>
-                      <td style={{ padding: 10, borderBottom: "1px solid rgba(255,255,255,0.12)" }}>{r?.date || ""}</td>
-                      <td style={{ padding: 10, borderBottom: "1px solid rgba(255,255,255,0.12)" }}>{r?.user?.employeeId || ""}</td>
-                      <td style={{ padding: 10, borderBottom: "1px solid rgba(255,255,255,0.12)" }}>{r?.user?.email || ""}</td>
-                      <td style={{ padding: 10, borderBottom: "1px solid rgba(255,255,255,0.12)" }}>{r?.status || ""}</td>
-                      <td style={{ padding: 10, borderBottom: "1px solid rgba(255,255,255,0.12)" }}>{r?.checkInAt ? new Date(r.checkInAt).toLocaleTimeString() : ""}</td>
-                      <td style={{ padding: 10, borderBottom: "1px solid rgba(255,255,255,0.12)" }}>{r?.checkOutAt ? new Date(r.checkOutAt).toLocaleTimeString() : ""}</td>
+                    <tr key={r?._id || `${r?.user?._id || "none"}-${r?.date}`}>
+                      <td>{r?.date || ""}</td>
+                      <td>{r?.user?.employeeId || ""}</td>
+                      <td>{r?.user?.email || ""}</td>
+                      <td>{r?.status || ""}</td>
+                      <td>{formatTime(r?.checkInAt)}</td>
+                      <td>{formatTime(r?.checkOutAt)}</td>
+                      <td>{hoursBetween(r?.checkInAt, r?.checkOutAt)}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              <div className="dash-note" style={{ padding: 10 }}>Showing latest {tableRows.length} records.</div>
             </div>
           )}
         </div>

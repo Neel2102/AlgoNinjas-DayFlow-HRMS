@@ -11,47 +11,63 @@ import Profile from "./routes/employee/Profile";
 import RequireRoleRoute from "./components/common/RequireRoleRoute";
 import EmployeeDetail from "./routes/admin/EmployeeDetail";
 import AttendanceAdmin from "./routes/admin/AttendanceAdmin";
+import Attendance from "./routes/employee/Attendance";
+import LeaveManagement from "./routes/employee/LeaveManagement";
+import LeaveApproval from "./routes/admin/LeaveApproval";
+import Payroll from "./routes/employee/Payroll";
+import PayrollManagement from "./routes/admin/PayrollManagement";
+import AdminDashboard from "./routes/admin/Dashboard";
+import EmployeeList from "./routes/admin/EmployeeList";
+import AttendanceManagement from "./routes/admin/AttendanceManagement";
 
-function AppContent() {
+function Layout() {
   const location = useLocation();
-  
+  const path = location.pathname || "/";
+
+  const hideNavbar =
+    path === "/dashboard-employee" ||
+    path === "/dashboard" ||
+    path === "/profile" ||
+    path === "/attendance" ||
+    path === "/leaves" ||
+    path === "/payroll" ||
+    path.startsWith("/admin");
+
   return (
     <>
-      {/* Only show Navbar if NOT on dashboard route */}
-      {location.pathname !== '/dashboard-employee' && <Navbar />}
-      
+      {hideNavbar ? null : <Navbar />}
       <Routes>
         <Route path="/" element={<LandingPage />} />
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/signup" element={<SignUp />} />
         <Route path="/dashboard-employee" element={<EmployeeDashboard />} />
+
+        <Route element={<ProtectedRoute />}>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/attendance" element={<Attendance />} />
+          <Route path="/leaves" element={<LeaveManagement />} />
+          <Route path="/payroll" element={<Payroll />} />
+
+          <Route element={<RequireRoleRoute roles={["admin", "hr"]} />}>
+            <Route path="/admin/dashboard" element={<AdminDashboard />} />
+            <Route path="/admin/employees" element={<EmployeeList />} />
+            <Route path="/admin/employees/:id" element={<EmployeeDetail />} />
+            <Route path="/admin/attendance" element={<AttendanceAdmin />} />
+            <Route path="/admin/attendance-management" element={<AttendanceManagement />} />
+            <Route path="/admin/leaves" element={<LeaveApproval />} />
+            <Route path="/admin/payroll" element={<PayrollManagement />} />
+          </Route>
+        </Route>
       </Routes>
     </>
   );
 }
 
-
-
 function App() {
   return (
     <BrowserRouter>
-
-      <AppContent />
-
-      <Navbar />   {/* Header */}
-      <Routes>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/signin" element={<SignIn />} />
-        <Route path="/signup" element={<SignUp />} />
-
-        <Route element={<ProtectedRoute />}>
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/profile" element={<Profile />} />
-
-          <Route element={<RequireRoleRoute roles={["admin"]} />}>
-            <Route path="/admin/employees/:id" element={<EmployeeDetail />} />
-            <Route path="/admin/attendance" element={<AttendanceAdmin />} />
-          </Route>
-        </Route>
-      </Routes>
+      <Layout />
     </BrowserRouter>
   )
 }

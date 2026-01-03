@@ -20,6 +20,8 @@ const SignUp = () => {
   const [employeeId, setEmployeeId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("employee");
+  const [adminSecret, setAdminSecret] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -46,7 +48,7 @@ const SignUp = () => {
     e.preventDefault();
     setError("");
     try {
-      await signUp({ employeeId, email, password });
+      await signUp({ employeeId, email, password, role, adminSecret: role === "employee" ? "" : adminSecret });
       navigate("/dashboard", { replace: true });
     } catch (err) {
       setError(getErrorMessage(err));
@@ -63,6 +65,28 @@ const SignUp = () => {
           {error ? <div className="auth-error">{error}</div> : null}
 
           <form className="auth-form" onSubmit={onSubmit}>
+            <div className="auth-row">
+              <label className="auth-label">Role :-</label>
+              <select className="auth-input" value={role} onChange={(e) => setRole(e.target.value)}>
+                <option value="employee">Employee</option>
+                <option value="hr">HR</option>
+                <option value="admin">Admin</option>
+              </select>
+            </div>
+
+            {role !== "employee" ? (
+              <div className="auth-row">
+                <label className="auth-label">Secret :-</label>
+                <input
+                  className="auth-input"
+                  value={adminSecret}
+                  onChange={(e) => setAdminSecret(e.target.value)}
+                  placeholder="Enter HR/Admin secret"
+                  autoComplete="off"
+                />
+              </div>
+            ) : null}
+
             <div className="auth-row">
               <label className="auth-label">Employee Id :-</label>
               <input

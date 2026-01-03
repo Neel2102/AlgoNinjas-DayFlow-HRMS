@@ -8,7 +8,7 @@ const EmployeeDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user?.role === 'admin' || user?.role === 'hr';
 
   // Fetch employee data
   useEffect(() => {

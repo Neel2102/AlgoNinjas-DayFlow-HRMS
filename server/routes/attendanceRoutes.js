@@ -14,6 +14,6 @@ router.post("/check-in", requireAuth, checkIn);
 router.post("/check-out", requireAuth, checkOut);
 router.get("/me", requireAuth, getMyAttendance);
 
-router.get("/", requireAuth, requireRole("admin"), getAllAttendance);
+router.get("/", requireAuth, requireRole("admin", "hr"), getAllAttendance);
 
 export default router;

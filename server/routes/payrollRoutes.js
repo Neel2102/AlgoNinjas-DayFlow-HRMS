@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.get("/me", requireAuth, myPayroll);
 
-router.get("/", requireAuth, requireRole("admin"), listPayroll);
-router.put("/:userId/:month", requireAuth, requireRole("admin"), upsertPayroll);
+router.get("/", requireAuth, requireRole("admin", "hr"), listPayroll);
+router.put("/:userId/:month", requireAuth, requireRole("admin", "hr"), upsertPayroll);
 
 export default router;
